@@ -11,6 +11,7 @@
   --font-sans: var(--font-charcoal-cy);
   --font-mono: var(--font-charcoal-cy);
   --font-family-charcoal-cy: var(--font-charcoal-cy);
+  --font-family-geneva: var(--font-geneva);
 }
 
 @media (prefers-color-scheme: dark) {

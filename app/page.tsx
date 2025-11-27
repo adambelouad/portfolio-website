@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Clock from "./components/Clock";
 import MenuItem from "./components/MenuItem";
+import DesktopIcon from "./components/DesktopIcon";
 
 export default function Home() {
   // Define menu items with their dropdown options
@@ -67,6 +68,30 @@ export default function Home() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Desktop Area */}
+      <div className="flex-1 relative overflow-hidden">
+        <DesktopIcon
+          iconSrc="/default-folder.png"
+          label="Portfolio"
+          initialPosition={{ x: window.innerWidth - 96 - 16, y: 45 }}
+          menuBarHeight={30}
+        />
+
+        <DesktopIcon
+          iconSrc="/github-icon.png"
+          label="GitHub"
+          initialPosition={{ x: window.innerWidth - 96 - 16, y: 140 }}
+          menuBarHeight={30}
+        />
+
+        <DesktopIcon
+          iconSrc="/linkedin-icon.png"
+          label="LinkedIn"
+          initialPosition={{ x: window.innerWidth - 96 - 16, y: 235 }}
+          menuBarHeight={30}
+        />
       </div>
     </div>
   );
