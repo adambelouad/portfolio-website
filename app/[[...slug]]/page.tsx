@@ -28,12 +28,21 @@ export default function Home() {
 
   const [openWindows, setOpenWindows] = useState<string[]>([]);
   const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [windowOrder, setWindowOrder] = useState<string[]>([]); // Track z-order (last = top)
   const [isClient, setIsClient] = useState(false);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
 
   // Storage keys for persisting state
   const STORAGE_KEY = "openWindows";
   const POSITIONS_KEY = "windowPositions";
+
+  // Bring a window to front
+  const bringToFront = useCallback((windowId: string) => {
+    setWindowOrder((prev) => {
+      const filtered = prev.filter((id) => id !== windowId);
+      return [...filtered, windowId];
+    });
+  }, []);
 
   // Get current window from URL path
   const getWindowFromPath = useCallback(() => {
@@ -99,25 +108,32 @@ export default function Home() {
     });
   }, [savePositionsToStorage]);
 
-  // Default positions for new windows
-  const defaultWindowPositions: Record<string, { x: number; y: number }> = {
-    portfolio: { x: 200, y: 100 },
-    about: { x: 230, y: 130 },
-  };
+  // Calculate center position for new windows (200px higher than true center)
+  const getCenteredPosition = useCallback(() => {
+    if (typeof window === "undefined") {
+      return { x: 200, y: 100 }; // SSR fallback
+    }
+    // Window component is 600px wide and ~400px tall
+    const windowWidth = 600;
+    const windowHeight = 400;
+    const menuBarHeight = 30;
+    const verticalOffset = 200; // Higher than center
+    
+    return {
+      x: Math.max(0, (window.innerWidth - windowWidth) / 2),
+      y: Math.max(0, (window.innerHeight - menuBarHeight - windowHeight) / 2 - verticalOffset),
+    };
+  }, []);
 
-  // Get position for a window (saved or default)
+  // Get position for a window (saved or centered for new)
   const getWindowPosition = useCallback((windowId: string) => {
     // First check saved positions
     if (windowPositions[windowId]) {
       return windowPositions[windowId];
     }
-    // Then check default positions
-    if (defaultWindowPositions[windowId]) {
-      return defaultWindowPositions[windowId];
-    }
-    // Fallback
-    return { x: 200, y: 100 };
-  }, [windowPositions]);
+    // New windows open centered
+    return getCenteredPosition();
+  }, [windowPositions, getCenteredPosition]);
 
   // Initialize on mount - check URL and open appropriate window
   useEffect(() => {
@@ -208,8 +224,13 @@ export default function Home() {
       const newOpenWindows = [...openWindows, windowId];
       setOpenWindows(newOpenWindows);
       saveWindowsToStorage(newOpenWindows);
+      // Add to window order (bring to front)
+      setWindowOrder((prev) => [...prev.filter((id) => id !== windowId), windowId]);
       // Store all open windows in history state for back/forward navigation
       window.history.pushState({ openWindows: newOpenWindows }, "", `/${windowId}`);
+    } else {
+      // Window already open, just bring to front
+      bringToFront(windowId);
     }
   };
 
@@ -218,6 +239,18 @@ export default function Home() {
     const newOpenWindows = openWindows.filter((id) => id !== windowId);
     setOpenWindows(newOpenWindows);
     saveWindowsToStorage(newOpenWindows);
+    
+    // Remove from window order
+    setWindowOrder((prev) => prev.filter((id) => id !== windowId));
+    
+    // Clear saved position so window reopens centered
+    setWindowPositions((prev) => {
+      const newPositions = { ...prev };
+      delete newPositions[windowId];
+      savePositionsToStorage(newPositions);
+      return newPositions;
+    });
+    
     // Update URL to reflect remaining windows or go home
     if (newOpenWindows.length > 0) {
       // Set URL to the last remaining window
@@ -330,6 +363,8 @@ export default function Home() {
             if (!config) return null;
             const WindowComponent = config.component;
             const savedPosition = getWindowPosition(windowId);
+            // Calculate z-index based on window order (50 base + position in order)
+            const zIndex = 50 + windowOrder.indexOf(windowId);
             return (
               <Window
                 key={windowId}
@@ -337,6 +372,8 @@ export default function Home() {
                 onClose={() => closeWindow(windowId)}
                 initialPosition={savedPosition}
                 onPositionChange={(pos) => updateWindowPosition(windowId, pos)}
+                zIndex={zIndex}
+                onFocus={() => bringToFront(windowId)}
               >
                 <WindowComponent />
               </Window>

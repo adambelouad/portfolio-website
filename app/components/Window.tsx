@@ -6,31 +6,46 @@ interface WindowProps {
   title: string;
   children: ReactNode;
   initialPosition?: { x: number; y: number };
+  initialSize?: { width: number; height: number };
+  zIndex?: number;
   onClose: () => void;
   onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
+  onFocus?: () => void;
 }
+
+const MIN_WIDTH = 300;
+const MIN_HEIGHT = 200;
 
 export default function Window({
   title,
   children,
   initialPosition = { x: 100, y: 100 },
+  initialSize = { width: 600, height: 400 },
+  zIndex = 50,
   onClose,
   onPositionChange,
+  onSizeChange,
+  onFocus,
 }: WindowProps) {
   const [position, setPosition] = useState(initialPosition);
+  const [size, setSize] = useState(initialSize);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
-  // Use ref to track current position for mouseup handler (avoids stale closure)
+  // Use refs to track current values for mouseup handler (avoids stale closure)
   const positionRef = useRef(position);
   positionRef.current = position;
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
   
   // Track if position has been manually set (dragged)
   const hasBeenDragged = useRef(false);
 
   // Update position when initialPosition prop changes (only if never dragged in this session)
   useEffect(() => {
-    // Only update from prop if we haven't dragged yet and not currently dragging
     if (!isDragging && !hasBeenDragged.current) {
       const needsUpdate = position.x !== initialPosition.x || position.y !== initialPosition.y;
       if (needsUpdate) {
@@ -38,6 +53,13 @@ export default function Window({
       }
     }
   }, [initialPosition.x, initialPosition.y, isDragging, position.x, position.y]);
+
+  // Update size when initialSize prop changes
+  useEffect(() => {
+    if (!isResizing) {
+      setSize(initialSize);
+    }
+  }, [initialSize.width, initialSize.height, isResizing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -49,6 +71,19 @@ export default function Window({
     });
   };
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: size.width,
+      height: size.height,
+    });
+  };
+
+  // Handle dragging
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
@@ -62,9 +97,7 @@ export default function Window({
 
     const handleMouseUp = () => {
       if (isDragging) {
-        // Mark as dragged so initialPosition prop won't override
         hasBeenDragged.current = true;
-        // Report final position when drag ends (use ref for current value)
         onPositionChange?.(positionRef.current);
       }
       setIsDragging(false);
@@ -81,19 +114,51 @@ export default function Window({
     };
   }, [isDragging, dragOffset, onPositionChange]);
 
+  // Handle resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+        const newWidth = Math.max(MIN_WIDTH, resizeStart.width + deltaX);
+        const newHeight = Math.max(MIN_HEIGHT, resizeStart.height + deltaY);
+        setSize({ width: newWidth, height: newHeight });
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing) {
+        onSizeChange?.(sizeRef.current);
+      }
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing, resizeStart, onSizeChange]);
+
   return (
     <div
-      className="absolute z-50 shadow-lg select-none"
+      className="absolute shadow-lg select-none flex flex-col"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: "600px",
-        minHeight: "400px",
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        zIndex: zIndex,
       }}
+      onMouseDown={onFocus}
     >
       {/* Title Bar */}
       <div
-        className="flex items-center justify-between px-1 cursor-grab active:cursor-grabbing"
+        className="flex items-center justify-between px-1 cursor-grab active:cursor-grabbing shrink-0"
         style={{
           height: "19px",
           background: "linear-gradient(180deg, #6699FF 0%, #3366CC 100%)",
@@ -120,14 +185,29 @@ export default function Window({
 
       {/* Window Content */}
       <div
-        className="bg-white border-l border-r border-b border-black p-4 overflow-auto"
-        style={{
-          minHeight: "380px",
-          maxHeight: "600px",
-        }}
+        className="bg-white border-l border-r border-b border-black p-4 overflow-auto flex-1"
       >
         {children}
       </div>
+
+      {/* Resize Handle (bottom-right corner) */}
+      <div
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+        style={{
+          background: `
+            linear-gradient(135deg, 
+              transparent 0%, transparent 30%,
+              #888 30%, #888 35%,
+              transparent 35%, transparent 45%,
+              #888 45%, #888 50%,
+              transparent 50%, transparent 60%,
+              #888 60%, #888 65%,
+              transparent 65%, transparent 100%
+            )
+          `,
+        }}
+        onMouseDown={handleResizeMouseDown}
+      />
     </div>
   );
 }
