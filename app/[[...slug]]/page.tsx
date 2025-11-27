@@ -1,0 +1,349 @@
+"use client";
+
+import Image from "next/image";
+import Clock from "../components/Clock";
+import MenuItem from "../components/MenuItem";
+import DesktopIcon from "../components/DesktopIcon";
+import Window from "../components/Window";
+import PortfolioWindow from "../portfolio/PortfolioWindow";
+import AboutWindow from "../about/AboutWindow";
+import { useState, useEffect, useCallback } from "react";
+
+// Define available windows and their configurations
+const WINDOW_CONFIG: Record<string, { title: string; component: React.ComponentType }> = {
+  portfolio: { title: "Portfolio", component: PortfolioWindow },
+  about: { title: "About", component: AboutWindow },
+};
+
+export default function Home() {
+  // Use a fixed default position for SSR (assuming 1920px width)
+  const defaultRightX = 1920 - 96 - 16;
+
+  const [iconPositions, setIconPositions] = useState({
+    portfolio: { x: defaultRightX, y: 45 },
+    about: { x: defaultRightX, y: 140 },
+    github: { x: defaultRightX, y: 235 },
+    linkedin: { x: defaultRightX, y: 330 },
+  });
+
+  const [openWindows, setOpenWindows] = useState<string[]>([]);
+  const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [isClient, setIsClient] = useState(false);
+  const [positionsLoaded, setPositionsLoaded] = useState(false);
+
+  // Storage keys for persisting state
+  const STORAGE_KEY = "openWindows";
+  const POSITIONS_KEY = "windowPositions";
+
+  // Get current window from URL path
+  const getWindowFromPath = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const path = window.location.pathname.slice(1); // Remove leading slash
+    return path && WINDOW_CONFIG[path] ? path : null;
+  }, []);
+
+  // Save open windows to localStorage
+  const saveWindowsToStorage = useCallback((windows: string[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(windows));
+    } catch {
+      // localStorage might be unavailable
+    }
+  }, []);
+
+  // Load open windows from localStorage
+  const loadWindowsFromStorage = useCallback((): string[] => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Filter to only valid windows
+          return parsed.filter((w) => WINDOW_CONFIG[w]);
+        }
+      }
+    } catch {
+      // localStorage might be unavailable or corrupted
+    }
+    return [];
+  }, []);
+
+  // Save window positions to localStorage
+  const savePositionsToStorage = useCallback((positions: Record<string, { x: number; y: number }>) => {
+    try {
+      localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
+    } catch {
+      // localStorage might be unavailable
+    }
+  }, []);
+
+  // Load window positions from localStorage
+  const loadPositionsFromStorage = useCallback((): Record<string, { x: number; y: number }> => {
+    try {
+      const saved = localStorage.getItem(POSITIONS_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // localStorage might be unavailable or corrupted
+    }
+    return {};
+  }, []);
+
+  // Update a single window's position
+  const updateWindowPosition = useCallback((windowId: string, position: { x: number; y: number }) => {
+    setWindowPositions((prev) => {
+      const newPositions = { ...prev, [windowId]: position };
+      savePositionsToStorage(newPositions);
+      return newPositions;
+    });
+  }, [savePositionsToStorage]);
+
+  // Default positions for new windows
+  const defaultWindowPositions: Record<string, { x: number; y: number }> = {
+    portfolio: { x: 200, y: 100 },
+    about: { x: 230, y: 130 },
+  };
+
+  // Get position for a window (saved or default)
+  const getWindowPosition = useCallback((windowId: string) => {
+    // First check saved positions
+    if (windowPositions[windowId]) {
+      return windowPositions[windowId];
+    }
+    // Then check default positions
+    if (defaultWindowPositions[windowId]) {
+      return defaultWindowPositions[windowId];
+    }
+    // Fallback
+    return { x: 200, y: 100 };
+  }, [windowPositions]);
+
+  // Initialize on mount - check URL and open appropriate window
+  useEffect(() => {
+    setIsClient(true);
+    const windowFromPath = getWindowFromPath();
+    const savedWindows = loadWindowsFromStorage();
+    const savedPositions = loadPositionsFromStorage();
+    
+    // Load saved positions first
+    setWindowPositions(savedPositions);
+    setPositionsLoaded(true);
+    
+    if (windowFromPath) {
+      // Add the URL window to saved windows (if not already there)
+      if (!savedWindows.includes(windowFromPath)) {
+        const newWindows = [...savedWindows, windowFromPath];
+        setOpenWindows(newWindows);
+        saveWindowsToStorage(newWindows);
+      } else {
+        setOpenWindows(savedWindows);
+      }
+    } else if (savedWindows.length > 0) {
+      // No URL window, but we have saved windows - keep them but clear URL to home
+      setOpenWindows(savedWindows);
+    }
+  }, [getWindowFromPath, loadWindowsFromStorage, loadPositionsFromStorage, saveWindowsToStorage]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Use saved state if available (preserves multiple windows)
+      if (event.state?.openWindows && Array.isArray(event.state.openWindows)) {
+        setOpenWindows(event.state.openWindows);
+        saveWindowsToStorage(event.state.openWindows);
+      } else {
+        // Fallback to URL-based detection
+        const windowFromPath = getWindowFromPath();
+        if (windowFromPath) {
+          const savedWindows = loadWindowsFromStorage();
+          if (!savedWindows.includes(windowFromPath)) {
+            const newWindows = [...savedWindows, windowFromPath];
+            setOpenWindows(newWindows);
+            saveWindowsToStorage(newWindows);
+          } else {
+            setOpenWindows(savedWindows);
+          }
+        } else {
+          setOpenWindows([]);
+          saveWindowsToStorage([]);
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [getWindowFromPath, loadWindowsFromStorage, saveWindowsToStorage]);
+
+  // Calculate icon positions after mount
+  useEffect(() => {
+    const rightPosition = (y: number) => ({
+      x: window.innerWidth - 96 - 16,
+      y,
+    });
+
+    setIconPositions({
+      portfolio: rightPosition(45),
+      about: rightPosition(140),
+      github: rightPosition(235),
+      linkedin: rightPosition(330),
+    });
+
+    const handleResize = () => {
+      setIconPositions({
+        portfolio: rightPosition(45),
+        about: rightPosition(140),
+        github: rightPosition(235),
+        linkedin: rightPosition(330),
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Open a window and update URL (no page refresh)
+  const openWindow = (windowId: string) => {
+    if (!openWindows.includes(windowId)) {
+      const newOpenWindows = [...openWindows, windowId];
+      setOpenWindows(newOpenWindows);
+      saveWindowsToStorage(newOpenWindows);
+      // Store all open windows in history state for back/forward navigation
+      window.history.pushState({ openWindows: newOpenWindows }, "", `/${windowId}`);
+    }
+  };
+
+  // Close a window and update URL (no page refresh)
+  const closeWindow = (windowId: string) => {
+    const newOpenWindows = openWindows.filter((id) => id !== windowId);
+    setOpenWindows(newOpenWindows);
+    saveWindowsToStorage(newOpenWindows);
+    // Update URL to reflect remaining windows or go home
+    if (newOpenWindows.length > 0) {
+      // Set URL to the last remaining window
+      const lastWindow = newOpenWindows[newOpenWindows.length - 1];
+      window.history.pushState({ openWindows: newOpenWindows }, "", `/${lastWindow}`);
+    } else {
+      window.history.pushState({ openWindows: [] }, "", "/");
+    }
+  };
+
+  // Menu items configuration
+  const menuItems = [
+    {
+      label: "Portfolio",
+      items: ["Projects", "Gallery", "Case Studies", "---", "View All"],
+    },
+    {
+      label: "About",
+      items: ["About Me", "Experience", "Skills", "---", "Resume"],
+    },
+    {
+      label: "Contact",
+      items: ["Email", "LinkedIn", "GitHub"],
+    },
+  ];
+
+  return (
+    <div className="flex min-h-screen flex-col font-sans bg-[url('/quantum-foam-background.png')] bg-cover bg-center bg-no-repeat">
+      {/* Top Header Bar */}
+      <div className="w-full h-[30px] bg-[#DDDDDD] relative border-b-[1px] border-b-[#BBBBBB] after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-[-2px] after:h-[1px] after:bg-[#262626] flex flex-row items-center justify-between">
+        {/* Left Side of Top Header Bar */}
+        <div className="flex h-full items-center justify-start">
+          <div className="flex h-[30px] items-center px-4 hover:bg-[#333399] hover:text-white transition-colors cursor-pointer">
+            <Image src="/apple-logo.png" alt="Apple Logo" width={18} height={18} />
+          </div>
+          <div className="flex h-[30px]">
+            {menuItems.map((menu, index) => (
+              <MenuItem key={index} label={menu.label} items={menu.items} />
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side of Top Header Bar */}
+        <div className="flex h-full items-center justify-end">
+          <Clock />
+          <Image
+            src="/menu-bar-resizer.png"
+            alt="Menu Bar Resizer"
+            width={10}
+            height={10}
+            className="cursor-pointer"
+          />
+          <div className="relative flex h-[30px] items-center">
+            <MenuItem
+              label="Finder"
+              icon={
+                <Image
+                  src="/finder.png"
+                  alt="Finder Icon"
+                  width={20}
+                  height={15}
+                  className="mr-1"
+                />
+              }
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Area */}
+      <div className="flex-1 relative overflow-hidden">
+        <DesktopIcon
+          iconSrc="/default-folder.png"
+          label="Portfolio"
+          onOpen={() => openWindow("portfolio")}
+          initialPosition={iconPositions.portfolio}
+          menuBarHeight={30}
+        />
+
+        <DesktopIcon
+          iconSrc="/default-folder.png"
+          label="About"
+          onOpen={() => openWindow("about")}
+          initialPosition={iconPositions.about}
+          menuBarHeight={30}
+        />
+
+        <DesktopIcon
+          iconSrc="/github-icon.png"
+          label="GitHub"
+          link="https://github.com/adambelouad"
+          openInNewTab={true}
+          initialPosition={iconPositions.github}
+          menuBarHeight={30}
+        />
+
+        <DesktopIcon
+          iconSrc="/linkedin-logo.png"
+          label="LinkedIn"
+          link="https://www.linkedin.com/in/adambelouad"
+          openInNewTab={true}
+          initialPosition={iconPositions.linkedin}
+          menuBarHeight={30}
+        />
+
+        {/* Render all open windows */}
+        {isClient && positionsLoaded &&
+          openWindows.map((windowId) => {
+            const config = WINDOW_CONFIG[windowId];
+            if (!config) return null;
+            const WindowComponent = config.component;
+            const savedPosition = getWindowPosition(windowId);
+            return (
+              <Window
+                key={windowId}
+                title={config.title}
+                onClose={() => closeWindow(windowId)}
+                initialPosition={savedPosition}
+                onPositionChange={(pos) => updateWindowPosition(windowId, pos)}
+              >
+                <WindowComponent />
+              </Window>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+

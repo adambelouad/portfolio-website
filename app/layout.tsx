@@ -27,7 +27,7 @@ const geneva = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Adam Belouad",
+  title: "adam belouad",
   description: "Adam Belouad's Personal Website",
 };
 
