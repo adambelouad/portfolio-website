@@ -15,8 +15,15 @@ const WINDOW_CONFIG: Record<string, { title: string; component: React.ComponentT
   about: { title: "About", component: AboutWindow },
 };
 
+// Helper to get initial open windows from URL (runs during SSR and client)
+function getInitialWindowFromPath(): string | null {
+  if (typeof window === "undefined") return null;
+  const path = window.location.pathname.slice(1);
+  return path && WINDOW_CONFIG[path] ? path : null;
+}
+
 export default function Home() {
-  // Use a fixed default position for SSR (assuming 1920px width)
+  // Use a fixed default position for SSR (right-aligned, assuming common screen width)
   const defaultRightX = 1920 - 96 - 16;
 
   const [iconPositions, setIconPositions] = useState({
@@ -26,15 +33,44 @@ export default function Home() {
     linkedin: { x: defaultRightX, y: 330 },
   });
 
-  const [openWindows, setOpenWindows] = useState<string[]>([]);
-  const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
+  // Use lazy initialization to read from localStorage synchronously on first render
+  const [openWindows, setOpenWindows] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const windowFromPath = getInitialWindowFromPath();
+      const saved = localStorage.getItem("openWindows");
+      const savedWindows = saved ? JSON.parse(saved).filter((w: string) => WINDOW_CONFIG[w]) : [];
+      
+      if (windowFromPath && !savedWindows.includes(windowFromPath)) {
+        return [...savedWindows, windowFromPath];
+      }
+      return savedWindows;
+    } catch {
+      return [];
+    }
+  });
+
+  const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem("windowPositions");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
   const [windowOrder, setWindowOrder] = useState<string[]>([]); // Track z-order (last = top)
   const [isClient, setIsClient] = useState(false);
-  const [positionsLoaded, setPositionsLoaded] = useState(false);
 
   // Storage keys for persisting state
   const STORAGE_KEY = "openWindows";
   const POSITIONS_KEY = "windowPositions";
+
+  // Mark client-side hydration complete
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Bring a window to front
   const bringToFront = useCallback((windowId: string) => {
@@ -135,31 +171,13 @@ export default function Home() {
     return getCenteredPosition();
   }, [windowPositions, getCenteredPosition]);
 
-  // Initialize on mount - check URL and open appropriate window
+  // Sync URL window to storage on mount (lazy init already loaded the state)
   useEffect(() => {
-    setIsClient(true);
     const windowFromPath = getWindowFromPath();
-    const savedWindows = loadWindowsFromStorage();
-    const savedPositions = loadPositionsFromStorage();
-    
-    // Load saved positions first
-    setWindowPositions(savedPositions);
-    setPositionsLoaded(true);
-    
-    if (windowFromPath) {
-      // Add the URL window to saved windows (if not already there)
-      if (!savedWindows.includes(windowFromPath)) {
-        const newWindows = [...savedWindows, windowFromPath];
-        setOpenWindows(newWindows);
-        saveWindowsToStorage(newWindows);
-      } else {
-        setOpenWindows(savedWindows);
-      }
-    } else if (savedWindows.length > 0) {
-      // No URL window, but we have saved windows - keep them but clear URL to home
-      setOpenWindows(savedWindows);
+    if (windowFromPath && openWindows.includes(windowFromPath)) {
+      saveWindowsToStorage(openWindows);
     }
-  }, [getWindowFromPath, loadWindowsFromStorage, loadPositionsFromStorage, saveWindowsToStorage]);
+  }, []); // Only run once on mount
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -357,7 +375,7 @@ export default function Home() {
         />
 
         {/* Render all open windows */}
-        {isClient && positionsLoaded &&
+        {isClient &&
           openWindows.map((windowId) => {
             const config = WINDOW_CONFIG[windowId];
             if (!config) return null;

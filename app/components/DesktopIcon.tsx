@@ -112,6 +112,8 @@ export default function DesktopIcon({
         left: `${position.x}px`,
         top: `${position.y}px`,
         cursor: isDragging ? "grabbing" : "pointer",
+        // Smooth transition when position changes (except during dragging)
+        transition: isDragging ? "none" : "left 150ms ease-out, top 150ms ease-out",
       }}
       onMouseDown={handleMouseDown}
     >
