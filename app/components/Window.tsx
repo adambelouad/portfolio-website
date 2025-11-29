@@ -44,6 +44,8 @@ export default function Window({
   
   // Track if position has been manually set (dragged)
   const hasBeenDragged = useRef(false);
+  // Track if size has been manually changed (resized)
+  const hasBeenResized = useRef(false);
 
   // Animate in on mount
   useEffect(() => {
@@ -64,12 +66,15 @@ export default function Window({
     }
   }, [initialPosition.x, initialPosition.y, isDragging, position.x, position.y]);
 
-  // Update size when initialSize prop changes
+  // Update size when initialSize prop changes (only if never manually resized)
   useEffect(() => {
-    if (!isResizing) {
-      setSize(initialSize);
+    if (!isResizing && !hasBeenResized.current) {
+      const needsUpdate = size.width !== initialSize.width || size.height !== initialSize.height;
+      if (needsUpdate) {
+        setSize(initialSize);
+      }
     }
-  }, [initialSize.width, initialSize.height, isResizing]);
+  }, [initialSize.width, initialSize.height, isResizing, size.width, size.height]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -138,6 +143,7 @@ export default function Window({
 
     const handleMouseUp = () => {
       if (isResizing) {
+        hasBeenResized.current = true;
         onSizeChange?.(sizeRef.current);
       }
       setIsResizing(false);
@@ -165,6 +171,9 @@ export default function Window({
         zIndex: zIndex,
         background: "#CCCCCC",
         border: "1px solid #262626",
+        boxSizing: "border-box",
+        outline: "1px solid #BBBBBB",
+        outlineOffset: "-2px",
         boxShadow: "inset -2px -2px 0 rgba(38,38,38,0.4), inset 2px 2px 0 rgba(38,38,38,0.1)",
         // Smooth entrance animation
         opacity: isVisible ? 1 : 0,
@@ -393,6 +402,8 @@ export default function Window({
           height: "20px",
           background: "#EEEEEE",
           borderTop: "1px solid #262626",
+          position: "relative",
+          zIndex: 10,
         }}
       >
         {/* Horizontal scrollbar track */}
@@ -401,7 +412,7 @@ export default function Window({
         {/* Resize grip area */}
         <div
           className="cursor-se-resize relative"
-          style={{ width: "20px", height: "20px" }}
+          style={{ width: "20px", height: "20px", zIndex: 20 }}
           onMouseDown={handleResizeMouseDown}
         >
           {/* Diagonal grip lines */}
@@ -439,9 +450,10 @@ export default function Window({
         className="absolute right-0 top-[57px]"
         style={{
           width: "20px",
-          bottom: "20px",
+          bottom: "21px",
           background: "#EEEEEE",
           borderLeft: "1px solid #262626",
+          pointerEvents: "auto",
         }}
       >
         {/* Scroll up button */}
