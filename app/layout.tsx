@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const charcoalCY = localFont({
-  src: "./fonts/Charcoal_CY.ttf",
-  variable: "--font-charcoal-cy",
+const charcoal = localFont({
+  src: "./fonts/charcoal.ttf",
+  variable: "--font-charcoal",
   display: "swap",
 });
 
 const geneva = localFont({
-  src: "./fonts/geneva-9-1.otf.woff2",
+  src: "./fonts/geneva.woff2",
   variable: "--font-geneva",
   display: "swap",
   weight: "400",
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${charcoalCY.variable} ${geneva.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${charcoal.variable} ${geneva.variable} antialiased`}
       >
         {children}
       </body>

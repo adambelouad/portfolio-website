@@ -127,7 +127,7 @@ export default function DesktopIcon({
         />
       </div>
       <div
-        className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[22px] [font-family:var(--font-geneva),_Geneva,_'Geneva_CY',_sans-serif] text-center leading-[0.85] py-[0px] h-[18px]"
+        className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[22px] [font-family:var(--font-geneva),_sans-serif] text-center leading-[0.85] py-[0px] h-[18px]"
       >
         {label}
       </div>

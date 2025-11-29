@@ -8,9 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-charcoal-cy);
-  --font-mono: var(--font-charcoal-cy);
-  --font-family-charcoal-cy: var(--font-charcoal-cy);
+  --font-sans: var(--font-charcoal);
+  --font-mono: var(--font-charcoal);
+  --font-family-charcoal: var(--font-charcoal);
   --font-family-geneva: var(--font-geneva);
 }
 
@@ -24,5 +24,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-charcoal-cy), Arial, Helvetica, sans-serif;
+  font-family: var(--font-charcoal), Arial, Helvetica, sans-serif;
 }
