@@ -48,10 +48,10 @@ export default function MenuItem({ label, items, icon }: MenuItemProps) {
             border: "1px solid #000",
             boxShadow: [
               "1px 1px 0 rgba(0,0,0,1)", // outer shadow for border effect
-              "inset 1px 0 0 0 #fff",    // inner left white
-              "inset 0 1px 0 0 #fff",    // inner top white
+              "inset 1px 0 0 0 #fff", // inner left white
+              "inset 0 1px 0 0 #fff", // inner top white
               "inset -1px 0 0 0 #BBBBBB", // inner right bbbbbb
-              "inset 0 -1px 0 0 #BBBBBB" // inner bottom bbbbbb
+              "inset 0 -1px 0 0 #BBBBBB", // inner bottom bbbbbb
             ].join(", "),
           }}
         >

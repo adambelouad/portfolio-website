@@ -33,15 +33,20 @@ export default function Window({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [resizeStart, setResizeStart] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [isVisible, setIsVisible] = useState(false);
-  
+
   // Use refs to track current values for mouseup handler (avoids stale closure)
   const positionRef = useRef(position);
   positionRef.current = position;
   const sizeRef = useRef(size);
   sizeRef.current = size;
-  
+
   // Track if position has been manually set (dragged)
   const hasBeenDragged = useRef(false);
   // Track if size has been manually changed (resized)
@@ -59,22 +64,36 @@ export default function Window({
   // Update position when initialPosition prop changes (only if never dragged in this session)
   useEffect(() => {
     if (!isDragging && !hasBeenDragged.current) {
-      const needsUpdate = position.x !== initialPosition.x || position.y !== initialPosition.y;
+      const needsUpdate =
+        position.x !== initialPosition.x || position.y !== initialPosition.y;
       if (needsUpdate) {
         setPosition(initialPosition);
       }
     }
-  }, [initialPosition.x, initialPosition.y, isDragging, position.x, position.y]);
+  }, [
+    initialPosition.x,
+    initialPosition.y,
+    isDragging,
+    position.x,
+    position.y,
+  ]);
 
   // Update size when initialSize prop changes (only if never manually resized)
   useEffect(() => {
     if (!isResizing && !hasBeenResized.current) {
-      const needsUpdate = size.width !== initialSize.width || size.height !== initialSize.height;
+      const needsUpdate =
+        size.width !== initialSize.width || size.height !== initialSize.height;
       if (needsUpdate) {
         setSize(initialSize);
       }
     }
-  }, [initialSize.width, initialSize.height, isResizing, size.width, size.height]);
+  }, [
+    initialSize.width,
+    initialSize.height,
+    isResizing,
+    size.width,
+    size.height,
+  ]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -174,11 +193,15 @@ export default function Window({
         boxSizing: "border-box",
         outline: "1px solid #BBBBBB",
         outlineOffset: "-2px",
-        boxShadow: "inset -2px -2px 0 rgba(38,38,38,0.4), inset 2px 2px 0 rgba(38,38,38,0.1)",
+        boxShadow:
+          "inset -2px -2px 0 rgba(38,38,38,0.4), inset 2px 2px 0 rgba(38,38,38,0.1)",
         // Smooth entrance animation
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "scale(1)" : "scale(0.95)",
-        transition: isDragging || isResizing ? "none" : "opacity 150ms ease-out, transform 150ms ease-out",
+        transition:
+          isDragging || isResizing
+            ? "none"
+            : "opacity 150ms ease-out, transform 150ms ease-out",
       }}
       onMouseDown={onFocus}
     >
@@ -194,75 +217,177 @@ export default function Window({
         {/* Close button */}
         <div
           className="relative cursor-pointer shrink-0"
-          style={{ width: "18px", height: "18px", marginRight: "6px" }}
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          style={{ width: "20px", height: "20px", marginRight: "6px" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
         >
-          {/* Button with gradient */}
+          {/* Outer black border */}
           <div
             style={{
-              width: "16px",
-              height: "16px",
-              background: "linear-gradient(135deg, #9A9A9A 0%, #F1F1F1 100%)",
-              border: "1px solid #262626",
+              position: "absolute",
+              inset: 0,
+              //border: "1px solid #000000",
+            }}
+          />
+          {/* White highlight - top edge */}
+          <div
+            style={{
               position: "absolute",
               top: "1px",
               left: "1px",
+              right: "2px",
+              height: "1px",
+              background: "#808080",
             }}
           />
-          {/* Inner highlight */}
+          {/* White highlight - left edge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "1px",
+              left: "1px",
+              bottom: "2px",
+              width: "1px",
+              background: "#808080",
+            }}
+          />
+          {/* Dark shadow - bottom edge */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "1px",
+              left: "1px",
+              right: "1px",
+              height: "1px",
+              background: "#FFFFFF",
+            }}
+          />
+          {/* Dark shadow - right edge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "1px",
+              right: "1px",
+              bottom: "1px",
+              width: "1px",
+              background: "#FFFFFF",
+            }}
+          />
+          {/* 2nd inner: solid #262626 border */}
+          {/* Top edge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "2px",
+              left: "2px",
+              right: "3px",
+              height: "1px",
+              background: "#262626",
+            }}
+          />
+          {/* Left edge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "2px",
+              left: "2px",
+              bottom: "3px",
+              width: "1px",
+              background: "#262626",
+            }}
+          />
+          {/* Bottom edge */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "2px",
+              left: "2px",
+              right: "2px",
+              height: "1px",
+              background: "#262626",
+            }}
+          />
+          {/* Right edge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "2px",
+              right: "2px",
+              bottom: "2px",
+              width: "1px",
+              background: "#262626",
+            }}
+          />
+
+          {/* 3rd inner: top/left light grey, bottom/right dark grey */}
+          {/* Top edge (light grey) */}
           <div
             style={{
               position: "absolute",
               top: "3px",
               left: "3px",
-              width: "12px",
+              right: "4px",
               height: "1px",
-              background: "white",
+              background: "#DFDFDF",
+              zIndex: 2,
             }}
           />
+          {/* Left edge (light grey) */}
           <div
             style={{
               position: "absolute",
               top: "3px",
               left: "3px",
+              bottom: "4px",
               width: "1px",
-              height: "12px",
-              background: "white",
+              background: "#DFDFDF",
+              zIndex: 2,
             }}
           />
-          {/* Inner shadow */}
+          {/* Bottom edge (dark grey) */}
           <div
             style={{
               position: "absolute",
               bottom: "3px",
+              left: "4px",
               right: "3px",
-              width: "12px",
               height: "1px",
               background: "#808080",
+              zIndex: 2,
             }}
           />
+          {/* Right edge (dark grey) */}
           <div
             style={{
               position: "absolute",
-              bottom: "3px",
+              top: "4px",
               right: "3px",
+              bottom: "3px",
               width: "1px",
-              height: "12px",
               background: "#808080",
+              zIndex: 2,
             }}
           />
-          {/* Outer shadow */}
-          <div style={{ position: "absolute", top: "0", left: "0", width: "1px", height: "18px", background: "#808080" }} />
-          <div style={{ position: "absolute", top: "0", left: "0", width: "18px", height: "1px", background: "#808080" }} />
-          <div style={{ position: "absolute", bottom: "0", right: "0", width: "1px", height: "18px", background: "white" }} />
-          <div style={{ position: "absolute", bottom: "0", right: "0", width: "18px", height: "1px", background: "white" }} />
+          {/* Center fill with gradient */}
+          <div
+            style={{
+              position: "absolute",
+              top: "3px",
+              left: "3px",
+              right: "3px",
+              bottom: "3px",
+              background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
+            }}
+          />
         </div>
 
         {/* Striped title area */}
         <div
           className="flex-1 flex items-center justify-center relative overflow-hidden"
           style={{
-            height: "20px",
+            height: "18px",
             background: "#DDDDDD",
             marginRight: "6px",
           }}
@@ -282,9 +407,27 @@ export default function Window({
             }}
           />
           {/* Left edge highlight */}
-          <div style={{ position: "absolute", left: 0, top: 0, width: "1px", height: "100%", background: "#EEEEEE" }} />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: "1px",
+              height: "100%",
+              background: "#EEEEEE",
+            }}
+          />
           {/* Right edge shadow */}
-          <div style={{ position: "absolute", right: 0, top: 0, width: "1px", height: "100%", background: "#C5C5C5" }} />
+          <div
+            style={{
+              position: "absolute",
+              right: 0,
+              top: 0,
+              width: "1px",
+              height: "100%",
+              background: "#C5C5C5",
+            }}
+          />
           {/* Title text */}
           <span
             className="relative z-10 px-3"
@@ -301,73 +444,309 @@ export default function Window({
         </div>
 
         {/* Right side buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Zoom/Maximize button */}
           <div
             className="relative cursor-pointer"
-            style={{ width: "18px", height: "18px" }}
+            style={{ width: "20px", height: "20px" }}
           >
+            {/* White highlight - top edge */}
             <div
               style={{
-                width: "16px",
-                height: "16px",
-                background: "linear-gradient(135deg, #9A9A9A 0%, #F1F1F1 100%)",
-                border: "1px solid #262626",
                 position: "absolute",
                 top: "1px",
                 left: "1px",
+                right: "2px",
+                height: "1px",
+                background: "#808080",
               }}
             />
-            {/* Inner square */}
+            {/* White highlight - left edge */}
             <div
               style={{
-                width: "10px",
-                height: "10px",
-                border: "1px solid #262626",
+                position: "absolute",
+                top: "1px",
+                left: "1px",
+                bottom: "2px",
+                width: "1px",
+                background: "#808080",
+              }}
+            />
+            {/* Dark shadow - bottom edge */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "1px",
+                left: "1px",
+                right: "1px",
+                height: "1px",
+                background: "#FFFFFF",
+              }}
+            />
+            {/* Dark shadow - right edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "1px",
+                right: "1px",
+                bottom: "1px",
+                width: "1px",
+                background: "#FFFFFF",
+              }}
+            />
+            {/* 2nd inner: solid #262626 border */}
+            {/* Top edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                left: "2px",
+                right: "3px",
+                height: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Left edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                left: "2px",
+                bottom: "3px",
+                width: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Bottom edge */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "2px",
+                left: "2px",
+                right: "2px",
+                height: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Right edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                right: "2px",
+                bottom: "2px",
+                width: "1px",
+                background: "#262626",
+              }}
+            />
+
+            {/* 3rd inner: top/left light grey, bottom/right dark grey */}
+            {/* Top edge (light grey) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: "3px",
+                right: "4px",
+                height: "1px",
+                background: "#DFDFDF",
+                zIndex: 2,
+              }}
+            />
+            {/* Left edge (light grey) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: "3px",
+                bottom: "4px",
+                width: "1px",
+                background: "#DFDFDF",
+                zIndex: 2,
+              }}
+            />
+            {/* Bottom edge (dark grey) */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "3px",
+                left: "4px",
+                right: "3px",
+                height: "1px",
+                background: "#808080",
+                zIndex: 2,
+              }}
+            />
+            {/* Right edge (dark grey) */}
+            <div
+              style={{
                 position: "absolute",
                 top: "4px",
-                left: "4px",
+                right: "3px",
+                bottom: "3px",
+                width: "1px",
+                background: "#808080",
+                zIndex: 2,
               }}
             />
-            {/* Outer shadow */}
-            <div style={{ position: "absolute", top: "0", left: "0", width: "1px", height: "18px", background: "#808080" }} />
-            <div style={{ position: "absolute", top: "0", left: "0", width: "18px", height: "1px", background: "#808080" }} />
-            <div style={{ position: "absolute", bottom: "0", right: "0", width: "1px", height: "18px", background: "white" }} />
-            <div style={{ position: "absolute", bottom: "0", right: "0", width: "18px", height: "1px", background: "white" }} />
+            <div
+              className="absolute top-[3px] left-[3px] right-[3px] bottom-[3px]"
+              style={{
+                background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
+              }}
+            />
           </div>
 
-          {/* Minimize button */}
+          {/* Minimize/Collapse button */}
           <div
             className="relative cursor-pointer"
-            style={{ width: "18px", height: "18px" }}
+            style={{ width: "20px", height: "20px" }}
           >
+            {/* White highlight - top edge */}
             <div
               style={{
-                width: "16px",
-                height: "16px",
-                background: "linear-gradient(135deg, #9A9A9A 0%, #F1F1F1 100%)",
-                border: "1px solid #262626",
                 position: "absolute",
                 top: "1px",
                 left: "1px",
+                right: "2px",
+                height: "1px",
+                background: "#808080",
               }}
             />
-            {/* Horizontal line */}
+            {/* White highlight - left edge */}
             <div
               style={{
-                width: "12px",
-                height: "3px",
-                border: "1px solid #262626",
                 position: "absolute",
-                top: "8px",
-                left: "3px",
+                top: "1px",
+                left: "1px",
+                bottom: "2px",
+                width: "1px",
+                background: "#808080",
               }}
             />
-            {/* Outer shadow */}
-            <div style={{ position: "absolute", top: "0", left: "0", width: "1px", height: "18px", background: "#808080" }} />
-            <div style={{ position: "absolute", top: "0", left: "0", width: "18px", height: "1px", background: "#808080" }} />
-            <div style={{ position: "absolute", bottom: "0", right: "0", width: "1px", height: "18px", background: "white" }} />
-            <div style={{ position: "absolute", bottom: "0", right: "0", width: "18px", height: "1px", background: "white" }} />
+            {/* Dark shadow - bottom edge */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "1px",
+                left: "1px",
+                right: "1px",
+                height: "1px",
+                background: "#FFFFFF",
+              }}
+            />
+            {/* Dark shadow - right edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "1px",
+                right: "1px",
+                bottom: "1px",
+                width: "1px",
+                background: "#FFFFFF",
+              }}
+            />
+            {/* 2nd inner: solid #262626 border */}
+            {/* Top edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                left: "2px",
+                right: "3px",
+                height: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Left edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                left: "2px",
+                bottom: "3px",
+                width: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Bottom edge */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "2px",
+                left: "2px",
+                right: "2px",
+                height: "1px",
+                background: "#262626",
+              }}
+            />
+            {/* Right edge */}
+            <div
+              style={{
+                position: "absolute",
+                top: "2px",
+                right: "2px",
+                bottom: "2px",
+                width: "1px",
+                background: "#262626",
+              }}
+            />
+
+            {/* 3rd inner: top/left light grey, bottom/right dark grey */}
+            {/* Top edge (light grey) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: "3px",
+                right: "4px",
+                height: "1px",
+                background: "#DFDFDF",
+                zIndex: 2,
+              }}
+            />
+            {/* Left edge (light grey) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: "3px",
+                bottom: "4px",
+                width: "1px",
+                background: "#DFDFDF",
+                zIndex: 2,
+              }}
+            />
+            {/* Bottom edge (dark grey) */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "3px",
+                left: "4px",
+                right: "3px",
+                height: "1px",
+                background: "#808080",
+                zIndex: 2,
+              }}
+            />
+            {/* Right edge (dark grey) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "4px",
+                right: "3px",
+                bottom: "3px",
+                width: "1px",
+                background: "#808080",
+                zIndex: 2,
+              }}
+            />
+            <div
+              className="absolute top-[3px] left-[3px] right-[3px] bottom-[3px]"
+              style={{
+                background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
+              }}
+            />
           </div>
         </div>
       </div>
@@ -379,7 +758,8 @@ export default function Window({
           background: "#DDDDDD",
           borderTop: "1px solid #262626",
           borderBottom: "1px solid #262626",
-          boxShadow: "inset 0 2px 0 white, inset 2px 0 0 white, inset 0 -2px 0 rgba(38,38,38,0.4), inset -2px 0 0 rgba(38,38,38,0.4)",
+          boxShadow:
+            "inset 0 2px 0 white, inset 2px 0 0 white, inset 0 -2px 0 rgba(38,38,38,0.4), inset -2px 0 0 rgba(38,38,38,0.4)",
         }}
       />
 
@@ -390,9 +770,7 @@ export default function Window({
           boxShadow: "inset 1px 0 0 #262626",
         }}
       >
-        <div className="p-4">
-          {children}
-        </div>
+        <div className="p-4">{children}</div>
       </div>
 
       {/* Bottom bar with scrollbar area */}
@@ -408,7 +786,7 @@ export default function Window({
       >
         {/* Horizontal scrollbar track */}
         <div className="flex-1" />
-        
+
         {/* Resize grip area */}
         <div
           className="cursor-se-resize relative"
@@ -477,10 +855,10 @@ export default function Window({
             }}
           />
         </div>
-        
+
         {/* Scroll track */}
         <div className="flex-1" />
-        
+
         {/* Scroll down button */}
         <div
           className="absolute bottom-0 left-0 right-0"
@@ -507,4 +885,3 @@ export default function Window({
     </div>
   );
 }
-

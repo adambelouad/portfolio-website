@@ -10,11 +10,11 @@ export default function Clock() {
       const now = new Date();
       let hours = now.getHours();
       const minutes = now.getMinutes();
-      
+
       const period = hours >= 12 ? "PM" : "AM";
-      
+
       hours = hours % 12 || 12;
-      
+
       setTime(`${hours}:${minutes.toString().padStart(2, "0")} ${period}`);
     };
 

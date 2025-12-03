@@ -10,7 +10,10 @@ import AboutWindow from "../about/AboutWindow";
 import { useState, useEffect, useCallback } from "react";
 
 // Define available windows and their configurations
-const WINDOW_CONFIG: Record<string, { title: string; component: React.ComponentType }> = {
+const WINDOW_CONFIG: Record<
+  string,
+  { title: string; component: React.ComponentType }
+> = {
   portfolio: { title: "Portfolio", component: PortfolioWindow },
   about: { title: "About", component: AboutWindow },
 };
@@ -39,8 +42,10 @@ export default function Home() {
     try {
       const windowFromPath = getInitialWindowFromPath();
       const saved = localStorage.getItem("openWindows");
-      const savedWindows = saved ? JSON.parse(saved).filter((w: string) => WINDOW_CONFIG[w]) : [];
-      
+      const savedWindows = saved
+        ? JSON.parse(saved).filter((w: string) => WINDOW_CONFIG[w])
+        : [];
+
       if (windowFromPath && !savedWindows.includes(windowFromPath)) {
         return [...savedWindows, windowFromPath];
       }
@@ -50,7 +55,9 @@ export default function Home() {
     }
   });
 
-  const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+  const [windowPositions, setWindowPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >(() => {
     if (typeof window === "undefined") return {};
     try {
       const saved = localStorage.getItem("windowPositions");
@@ -114,16 +121,22 @@ export default function Home() {
   }, []);
 
   // Save window positions to localStorage
-  const savePositionsToStorage = useCallback((positions: Record<string, { x: number; y: number }>) => {
-    try {
-      localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
-    } catch {
-      // localStorage might be unavailable
-    }
-  }, []);
+  const savePositionsToStorage = useCallback(
+    (positions: Record<string, { x: number; y: number }>) => {
+      try {
+        localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
+      } catch {
+        // localStorage might be unavailable
+      }
+    },
+    [],
+  );
 
   // Load window positions from localStorage
-  const loadPositionsFromStorage = useCallback((): Record<string, { x: number; y: number }> => {
+  const loadPositionsFromStorage = useCallback((): Record<
+    string,
+    { x: number; y: number }
+  > => {
     try {
       const saved = localStorage.getItem(POSITIONS_KEY);
       if (saved) {
@@ -136,13 +149,16 @@ export default function Home() {
   }, []);
 
   // Update a single window's position
-  const updateWindowPosition = useCallback((windowId: string, position: { x: number; y: number }) => {
-    setWindowPositions((prev) => {
-      const newPositions = { ...prev, [windowId]: position };
-      savePositionsToStorage(newPositions);
-      return newPositions;
-    });
-  }, [savePositionsToStorage]);
+  const updateWindowPosition = useCallback(
+    (windowId: string, position: { x: number; y: number }) => {
+      setWindowPositions((prev) => {
+        const newPositions = { ...prev, [windowId]: position };
+        savePositionsToStorage(newPositions);
+        return newPositions;
+      });
+    },
+    [savePositionsToStorage],
+  );
 
   // Calculate center position for new windows (200px higher than true center)
   const getCenteredPosition = useCallback(() => {
@@ -154,22 +170,29 @@ export default function Home() {
     const windowHeight = 400;
     const menuBarHeight = 30;
     const verticalOffset = 200; // Higher than center
-    
+
     return {
       x: Math.max(0, (window.innerWidth - windowWidth) / 2),
-      y: Math.max(0, (window.innerHeight - menuBarHeight - windowHeight) / 2 - verticalOffset),
+      y: Math.max(
+        0,
+        (window.innerHeight - menuBarHeight - windowHeight) / 2 -
+          verticalOffset,
+      ),
     };
   }, []);
 
   // Get position for a window (saved or centered for new)
-  const getWindowPosition = useCallback((windowId: string) => {
-    // First check saved positions
-    if (windowPositions[windowId]) {
-      return windowPositions[windowId];
-    }
-    // New windows open centered
-    return getCenteredPosition();
-  }, [windowPositions, getCenteredPosition]);
+  const getWindowPosition = useCallback(
+    (windowId: string) => {
+      // First check saved positions
+      if (windowPositions[windowId]) {
+        return windowPositions[windowId];
+      }
+      // New windows open centered
+      return getCenteredPosition();
+    },
+    [windowPositions, getCenteredPosition],
+  );
 
   // Sync URL window to storage on mount (lazy init already loaded the state)
   useEffect(() => {
@@ -243,9 +266,16 @@ export default function Home() {
       setOpenWindows(newOpenWindows);
       saveWindowsToStorage(newOpenWindows);
       // Add to window order (bring to front)
-      setWindowOrder((prev) => [...prev.filter((id) => id !== windowId), windowId]);
+      setWindowOrder((prev) => [
+        ...prev.filter((id) => id !== windowId),
+        windowId,
+      ]);
       // Store all open windows in history state for back/forward navigation
-      window.history.pushState({ openWindows: newOpenWindows }, "", `/${windowId}`);
+      window.history.pushState(
+        { openWindows: newOpenWindows },
+        "",
+        `/${windowId}`,
+      );
     } else {
       // Window already open, just bring to front
       bringToFront(windowId);
@@ -257,10 +287,10 @@ export default function Home() {
     const newOpenWindows = openWindows.filter((id) => id !== windowId);
     setOpenWindows(newOpenWindows);
     saveWindowsToStorage(newOpenWindows);
-    
+
     // Remove from window order
     setWindowOrder((prev) => prev.filter((id) => id !== windowId));
-    
+
     // Clear saved position so window reopens centered
     setWindowPositions((prev) => {
       const newPositions = { ...prev };
@@ -268,12 +298,16 @@ export default function Home() {
       savePositionsToStorage(newPositions);
       return newPositions;
     });
-    
+
     // Update URL to reflect remaining windows or go home
     if (newOpenWindows.length > 0) {
       // Set URL to the last remaining window
       const lastWindow = newOpenWindows[newOpenWindows.length - 1];
-      window.history.pushState({ openWindows: newOpenWindows }, "", `/${lastWindow}`);
+      window.history.pushState(
+        { openWindows: newOpenWindows },
+        "",
+        `/${lastWindow}`,
+      );
     } else {
       window.history.pushState({ openWindows: [] }, "", "/");
     }
@@ -302,7 +336,12 @@ export default function Home() {
         {/* Left Side of Top Header Bar */}
         <div className="flex h-full items-center justify-start">
           <div className="flex h-[30px] items-center px-4 hover:bg-[#333399] hover:text-white transition-colors cursor-pointer">
-            <Image src="/apple-logo.png" alt="Apple Logo" width={18} height={18} />
+            <Image
+              src="/apple-logo.png"
+              alt="Apple Logo"
+              width={18}
+              height={18}
+            />
           </div>
           <div className="flex h-[30px]">
             {menuItems.map((menu, index) => (
@@ -401,4 +440,3 @@ export default function Home() {
     </div>
   );
 }
-

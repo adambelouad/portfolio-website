@@ -47,7 +47,7 @@ export default function DesktopIcon({
     // Only open link if not dragged (position didn't change significantly)
     const dragDistance = Math.sqrt(
       Math.pow(e.clientX - dragStartPosition.x, 2) +
-      Math.pow(e.clientY - dragStartPosition.y, 2)
+        Math.pow(e.clientY - dragStartPosition.y, 2),
     );
 
     if (dragDistance < 5 && link) {
@@ -73,7 +73,7 @@ export default function DesktopIcon({
       if (isDragging) {
         const dragDistance = Math.sqrt(
           Math.pow(e.clientX - dragStartPosition.x, 2) +
-          Math.pow(e.clientY - dragStartPosition.y, 2)
+            Math.pow(e.clientY - dragStartPosition.y, 2),
         );
 
         // If minimal drag, treat as click
@@ -103,7 +103,15 @@ export default function DesktopIcon({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragOffset, menuBarHeight, dragStartPosition, link, openInNewTab, onOpen]);
+  }, [
+    isDragging,
+    dragOffset,
+    menuBarHeight,
+    dragStartPosition,
+    link,
+    openInNewTab,
+    onOpen,
+  ]);
 
   return (
     <div
@@ -113,7 +121,9 @@ export default function DesktopIcon({
         top: `${position.y}px`,
         cursor: isDragging ? "grabbing" : "pointer",
         // Smooth transition when position changes (except during dragging)
-        transition: isDragging ? "none" : "left 150ms ease-out, top 150ms ease-out",
+        transition: isDragging
+          ? "none"
+          : "left 150ms ease-out, top 150ms ease-out",
       }}
       onMouseDown={handleMouseDown}
     >
@@ -126,9 +136,7 @@ export default function DesktopIcon({
           draggable={false}
         />
       </div>
-      <div
-        className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[22px] [font-family:var(--font-geneva),_sans-serif] text-center leading-[0.85] py-[0px] h-[18px]"
-      >
+      <div className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[22px] [font-family:var(--font-geneva),_sans-serif] text-center leading-[0.85] py-[0px] h-[18px]">
         {label}
       </div>
     </div>

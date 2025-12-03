@@ -57,7 +57,9 @@ export default function AboutWindow() {
           <div className="space-y-2">
             <div>
               <p className="font-semibold text-sm">Senior Developer</p>
-              <p className="text-xs text-gray-600">Tech Company • 2022 - Present</p>
+              <p className="text-xs text-gray-600">
+                Tech Company • 2022 - Present
+              </p>
             </div>
             <div>
               <p className="font-semibold text-sm">Software Engineer</p>
@@ -69,4 +71,3 @@ export default function AboutWindow() {
     </div>
   );
 }
-
