@@ -218,6 +218,7 @@ export default function Window({
         <div
           className="relative cursor-pointer shrink-0"
           style={{ width: "20px", height: "20px", marginRight: "6px" }}
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onClose();
@@ -435,7 +436,7 @@ export default function Window({
               fontSize: "14px",
               fontWeight: "bold",
               color: "#262626",
-              background: "#DDDDDD",
+              background: "#CCCCCC",
               textShadow: "none",
             }}
           >
@@ -449,6 +450,7 @@ export default function Window({
           <div
             className="relative cursor-pointer"
             style={{ width: "20px", height: "20px" }}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {/* White highlight - top edge */}
             <div
@@ -601,6 +603,7 @@ export default function Window({
           <div
             className="relative cursor-pointer"
             style={{ width: "20px", height: "20px" }}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {/* White highlight - top edge */}
             <div
