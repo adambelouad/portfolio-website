@@ -30,10 +30,11 @@ export default function Home() {
   const defaultRightX = 1920 - 96 - 16;
 
   const [iconPositions, setIconPositions] = useState({
-    portfolio: { x: defaultRightX, y: 45 },
-    about: { x: defaultRightX, y: 140 },
-    github: { x: defaultRightX, y: 235 },
-    linkedin: { x: defaultRightX, y: 330 },
+    // portfolio: { x: defaultRightX, y: 45 },
+    // about: { x: defaultRightX, y: 140 },
+    resume: { x: defaultRightX, y: 45 },
+    github: { x: defaultRightX, y: 140 },
+    linkedin: { x: defaultRightX, y: 235 },
   });
 
   // Use lazy initialization to read from localStorage synchronously on first render
@@ -240,18 +241,20 @@ export default function Home() {
     });
 
     setIconPositions({
-      portfolio: rightPosition(45),
-      about: rightPosition(140),
-      github: rightPosition(235),
-      linkedin: rightPosition(330),
+      // portfolio: rightPosition(45),
+      // about: rightPosition(140),
+      resume: rightPosition(45),
+      github: rightPosition(140),
+      linkedin: rightPosition(235),
     });
 
     const handleResize = () => {
       setIconPositions({
-        portfolio: rightPosition(45),
-        about: rightPosition(140),
-        github: rightPosition(235),
-        linkedin: rightPosition(330),
+        // portfolio: rightPosition(45),
+        // about: rightPosition(140),
+        resume: rightPosition(45),
+        github: rightPosition(140),
+        linkedin: rightPosition(235),
       });
     };
 
@@ -314,20 +317,20 @@ export default function Home() {
   };
 
   // Menu items configuration
-  const menuItems = [
-    {
-      label: "Portfolio",
-      items: ["Projects", "Gallery", "Case Studies", "---", "View All"],
-    },
-    {
-      label: "About",
-      items: ["About Me", "Experience", "Skills", "---", "Resume"],
-    },
-    {
-      label: "Contact",
-      items: ["Email", "LinkedIn", "GitHub"],
-    },
-  ];
+  // const menuItems = [
+  //   {
+  //     label: "Portfolio",
+  //     items: ["Projects", "Gallery", "Case Studies", "---", "View All"],
+  //   },
+  //   {
+  //     label: "About",
+  //     items: ["About Me", "Experience", "Skills", "---", "Resume"],
+  //   },
+  //   {
+  //     label: "Contact",
+  //     items: ["Email", "LinkedIn", "GitHub"],
+  //   },
+  // ];
 
   return (
     <div className="flex min-h-screen flex-col font-sans bg-[url('/quantum-foam-background.png')] bg-cover bg-center bg-no-repeat">
@@ -343,11 +346,11 @@ export default function Home() {
               height={18}
             />
           </div>
-          <div className="flex h-[30px]">
+          {/* <div className="flex h-[30px]">
             {menuItems.map((menu, index) => (
               <MenuItem key={index} label={menu.label} items={menu.items} />
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Right Side of Top Header Bar */}
@@ -379,7 +382,7 @@ export default function Home() {
 
       {/* Desktop Area */}
       <div className="flex-1 relative overflow-hidden">
-        <DesktopIcon
+        {/* <DesktopIcon
           iconSrc="/default-folder.png"
           label="Portfolio"
           onOpen={() => openWindow("portfolio")}
@@ -392,6 +395,15 @@ export default function Home() {
           label="About"
           onOpen={() => openWindow("about")}
           initialPosition={iconPositions.about}
+          menuBarHeight={30}
+        /> */}
+
+        <DesktopIcon
+          iconSrc="/default-folder.png"
+          label="Resume"
+          link="/belouad_adam_resume.pdf"
+          openInNewTab={true}
+          initialPosition={iconPositions.resume}
           menuBarHeight={30}
         />
 
