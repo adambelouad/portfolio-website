@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
 }
 
 @theme inline {
@@ -12,17 +12,17 @@
   --font-mono: var(--font-charcoal);
   --font-family-charcoal: var(--font-charcoal);
   --font-family-geneva: var(--font-geneva);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-family-apple-garamond: var(--font-apple-garamond);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  color-scheme: light;
   font-family: var(--font-charcoal), Arial, Helvetica, sans-serif;
+}
+
+/* Force all text to be black regardless of dark mode */
+* {
+  color: inherit;
 }

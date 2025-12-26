@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, ReactNode } from "react";
+import Image from "next/image";
 
 interface WindowProps {
   title: string;
@@ -40,6 +41,8 @@ export default function Window({
     height: 0,
   });
   const [isVisible, setIsVisible] = useState(false);
+  const [scrollInfo, setScrollInfo] = useState({ scrollTop: 0, scrollHeight: 0, clientHeight: 0 });
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Use refs to track current values for mouseup handler (avoids stale closure)
   const positionRef = useRef(position);
@@ -54,12 +57,42 @@ export default function Window({
 
   // Animate in on mount
   useEffect(() => {
-    // Small delay to ensure the initial render happens first, then animate in
     const timer = requestAnimationFrame(() => {
       setIsVisible(true);
     });
     return () => cancelAnimationFrame(timer);
   }, []);
+
+  // Update scroll info when content changes or window resizes
+  const updateScrollInfo = () => {
+    if (contentRef.current) {
+      setScrollInfo({
+        scrollTop: contentRef.current.scrollTop,
+        scrollHeight: contentRef.current.scrollHeight,
+        clientHeight: contentRef.current.clientHeight,
+      });
+    }
+  };
+
+  useEffect(() => {
+    updateScrollInfo();
+    
+    // Use ResizeObserver to detect content size changes
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollInfo();
+    });
+    
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+    
+    return () => resizeObserver.disconnect();
+  }, [children]);
+
+  // Also update scroll info when window size changes
+  useEffect(() => {
+    updateScrollInfo();
+  }, [size]);
 
   // Update position when initialPosition prop changes (only if never dragged in this session)
   useEffect(() => {
@@ -181,710 +214,250 @@ export default function Window({
 
   return (
     <div
-      className="absolute select-none flex flex-col"
+      className={`absolute select-none flex flex-col bg-[#CCCCCC] border border-[#262626] box-border p-[5px] ${
+        isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+      } ${isDragging || isResizing ? "" : "transition-[opacity,transform] duration-150 ease-out"}`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: `${size.width}px`,
         height: `${size.height}px`,
         zIndex: zIndex,
-        background: "#CCCCCC",
-        border: "1px solid #262626",
-        boxSizing: "border-box",
-        outline: "1px solid #BBBBBB",
-        outlineOffset: "-2px",
         boxShadow:
-          "inset -2px -2px 0 rgba(38,38,38,0.4), inset 2px 2px 0 rgba(38,38,38,0.1)",
-        // Smooth entrance animation
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? "scale(1)" : "scale(0.95)",
-        transition:
-          isDragging || isResizing
-            ? "none"
-            : "opacity 150ms ease-out, transform 150ms ease-out",
+          "inset 1px 0 0 #BBBBBB, inset 0 1px 0 #BBBBBB, inset -1px 0 0 #8A8A8A, inset 0 -1px 0 #8A8A8A",
       }}
       onMouseDown={onFocus}
     >
       {/* Title Bar */}
       <div
-        className="flex items-center px-2 cursor-grab active:cursor-grabbing shrink-0"
-        style={{
-          height: "28px",
-          background: "#CCCCCC",
-        }}
+        className="flex items-center h-7 bg-[#CCCCCC] cursor-grab active:cursor-grabbing shrink-0"
         onMouseDown={handleMouseDown}
       >
         {/* Close button */}
-        <div
-          className="relative cursor-pointer shrink-0"
-          style={{ width: "20px", height: "20px", marginRight: "6px" }}
+        <div className="flex items-center gap-1 shrink-0 ">
+          <WindowButton
           onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-        >
-          {/* Outer black border */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              //border: "1px solid #000000",
-            }}
-          />
-          {/* White highlight - top edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "1px",
-              left: "1px",
-              right: "2px",
-              height: "1px",
-              background: "#808080",
-            }}
-          />
-          {/* White highlight - left edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "1px",
-              left: "1px",
-              bottom: "2px",
-              width: "1px",
-              background: "#808080",
-            }}
-          />
-          {/* Dark shadow - bottom edge */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "1px",
-              left: "1px",
-              right: "1px",
-              height: "1px",
-              background: "#FFFFFF",
-            }}
-          />
-          {/* Dark shadow - right edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "1px",
-              right: "1px",
-              bottom: "1px",
-              width: "1px",
-              background: "#FFFFFF",
-            }}
-          />
-          {/* 2nd inner: solid #262626 border */}
-          {/* Top edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "2px",
-              left: "2px",
-              right: "3px",
-              height: "1px",
-              background: "#262626",
-            }}
-          />
-          {/* Left edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "2px",
-              left: "2px",
-              bottom: "3px",
-              width: "1px",
-              background: "#262626",
-            }}
-          />
-          {/* Bottom edge */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "2px",
-              left: "2px",
-              right: "2px",
-              height: "1px",
-              background: "#262626",
-            }}
-          />
-          {/* Right edge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "2px",
-              right: "2px",
-              bottom: "2px",
-              width: "1px",
-              background: "#262626",
-            }}
-          />
-
-          {/* 3rd inner: top/left light grey, bottom/right dark grey */}
-          {/* Top edge (light grey) */}
-          <div
-            style={{
-              position: "absolute",
-              top: "3px",
-              left: "3px",
-              right: "4px",
-              height: "1px",
-              background: "#DFDFDF",
-              zIndex: 2,
-            }}
-          />
-          {/* Left edge (light grey) */}
-          <div
-            style={{
-              position: "absolute",
-              top: "3px",
-              left: "3px",
-              bottom: "4px",
-              width: "1px",
-              background: "#DFDFDF",
-              zIndex: 2,
-            }}
-          />
-          {/* Bottom edge (dark grey) */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "3px",
-              left: "4px",
-              right: "3px",
-              height: "1px",
-              background: "#808080",
-              zIndex: 2,
-            }}
-          />
-          {/* Right edge (dark grey) */}
-          <div
-            style={{
-              position: "absolute",
-              top: "4px",
-              right: "3px",
-              bottom: "3px",
-              width: "1px",
-              background: "#808080",
-              zIndex: 2,
-            }}
-          />
-          {/* Center fill with gradient */}
-          <div
-            style={{
-              position: "absolute",
-              top: "3px",
-              left: "3px",
-              right: "3px",
-              bottom: "3px",
-              background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
-            }}
+            onClick={() => onClose()}
           />
         </div>
 
         {/* Striped title area */}
-        <div
-          className="flex-1 flex items-center justify-center relative overflow-hidden"
-          style={{
-            height: "18px",
-            background: "#DDDDDD",
-            marginRight: "6px",
-          }}
-        >
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden h-[18px] bg-[#DDDDDD] mx-1.5">
           {/* Horizontal stripes */}
           <div
+            className="absolute inset-0"
             style={{
-              position: "absolute",
-              inset: 0,
-              background: `repeating-linear-gradient(
-                to bottom,
-                transparent 0px,
-                transparent 2px,
-                #999999 2px,
-                #999999 3px
-              )`,
+              background: `repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, #999999 2px, #999999 3px)`,
             }}
           />
           {/* Left edge highlight */}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: "1px",
-              height: "100%",
-              background: "#EEEEEE",
-            }}
-          />
+          <div className="absolute left-0 top-0 w-px h-full bg-[#EEEEEE]" />
           {/* Right edge shadow */}
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              width: "1px",
-              height: "100%",
-              background: "#C5C5C5",
-            }}
-          />
+          <div className="absolute right-0 top-0 w-px h-full bg-[#C5C5C5]" />
           {/* Title text */}
-          <span
-            className="relative z-10 px-3"
-            style={{
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: "#262626",
-              background: "#CCCCCC",
-              textShadow: "none",
-            }}
-          >
+          <span className="relative z-10 px-3 text-sm font-bold text-[#262626] bg-[#CCCCCC]">
             {title}
           </span>
         </div>
 
         {/* Right side buttons */}
         <div className="flex items-center gap-1 shrink-0">
-          {/* Zoom/Maximize button */}
-          <div
-            className="relative cursor-pointer"
-            style={{ width: "20px", height: "20px" }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            {/* White highlight - top edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "1px",
-                right: "2px",
-                height: "1px",
-                background: "#808080",
-              }}
-            />
-            {/* White highlight - left edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "1px",
-                bottom: "2px",
-                width: "1px",
-                background: "#808080",
-              }}
-            />
-            {/* Dark shadow - bottom edge */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "1px",
-                left: "1px",
-                right: "1px",
-                height: "1px",
-                background: "#FFFFFF",
-              }}
-            />
-            {/* Dark shadow - right edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                right: "1px",
-                bottom: "1px",
-                width: "1px",
-                background: "#FFFFFF",
-              }}
-            />
-            {/* 2nd inner: solid #262626 border */}
-            {/* Top edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                right: "3px",
-                height: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Left edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                bottom: "3px",
-                width: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Bottom edge */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "2px",
-                left: "2px",
-                right: "2px",
-                height: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Right edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                right: "2px",
-                bottom: "2px",
-                width: "1px",
-                background: "#262626",
-              }}
-            />
-
-            {/* 3rd inner: top/left light grey, bottom/right dark grey */}
-            {/* Top edge (light grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: "3px",
-                right: "4px",
-                height: "1px",
-                background: "#DFDFDF",
-                zIndex: 2,
-              }}
-            />
-            {/* Left edge (light grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: "3px",
-                bottom: "4px",
-                width: "1px",
-                background: "#DFDFDF",
-                zIndex: 2,
-              }}
-            />
-            {/* Bottom edge (dark grey) */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "3px",
-                left: "4px",
-                right: "3px",
-                height: "1px",
-                background: "#808080",
-                zIndex: 2,
-              }}
-            />
-            {/* Right edge (dark grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "4px",
-                right: "3px",
-                bottom: "3px",
-                width: "1px",
-                background: "#808080",
-                zIndex: 2,
-              }}
-            />
-            <div
-              className="absolute top-[3px] left-[3px] right-[3px] bottom-[3px]"
-              style={{
-                background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
-              }}
-            />
-          </div>
-
-          {/* Minimize/Collapse button */}
-          <div
-            className="relative cursor-pointer"
-            style={{ width: "20px", height: "20px" }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            {/* White highlight - top edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "1px",
-                right: "2px",
-                height: "1px",
-                background: "#808080",
-              }}
-            />
-            {/* White highlight - left edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "1px",
-                bottom: "2px",
-                width: "1px",
-                background: "#808080",
-              }}
-            />
-            {/* Dark shadow - bottom edge */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "1px",
-                left: "1px",
-                right: "1px",
-                height: "1px",
-                background: "#FFFFFF",
-              }}
-            />
-            {/* Dark shadow - right edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                right: "1px",
-                bottom: "1px",
-                width: "1px",
-                background: "#FFFFFF",
-              }}
-            />
-            {/* 2nd inner: solid #262626 border */}
-            {/* Top edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                right: "3px",
-                height: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Left edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                bottom: "3px",
-                width: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Bottom edge */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "2px",
-                left: "2px",
-                right: "2px",
-                height: "1px",
-                background: "#262626",
-              }}
-            />
-            {/* Right edge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                right: "2px",
-                bottom: "2px",
-                width: "1px",
-                background: "#262626",
-              }}
-            />
-
-            {/* 3rd inner: top/left light grey, bottom/right dark grey */}
-            {/* Top edge (light grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: "3px",
-                right: "4px",
-                height: "1px",
-                background: "#DFDFDF",
-                zIndex: 2,
-              }}
-            />
-            {/* Left edge (light grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: "3px",
-                bottom: "4px",
-                width: "1px",
-                background: "#DFDFDF",
-                zIndex: 2,
-              }}
-            />
-            {/* Bottom edge (dark grey) */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "3px",
-                left: "4px",
-                right: "3px",
-                height: "1px",
-                background: "#808080",
-                zIndex: 2,
-              }}
-            />
-            {/* Right edge (dark grey) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "4px",
-                right: "3px",
-                bottom: "3px",
-                width: "1px",
-                background: "#808080",
-                zIndex: 2,
-              }}
-            />
-            <div
-              className="absolute top-[3px] left-[3px] right-[3px] bottom-[3px]"
-              style={{
-                background: "linear-gradient(180deg, #CCCCCC 0%, #AAAAAA 100%)",
-              }}
-            />
-          </div>
+          <WindowButton onMouseDown={(e) => e.stopPropagation()} />
+          <WindowButton onMouseDown={(e) => e.stopPropagation()} />
         </div>
       </div>
 
-      {/* Secondary bar (path bar style) */}
-      <div
-        style={{
-          height: "28px",
-          background: "#DDDDDD",
-          borderTop: "1px solid #262626",
-          borderBottom: "1px solid #262626",
-          boxShadow:
-            "inset 0 2px 0 white, inset 2px 0 0 white, inset 0 -2px 0 rgba(38,38,38,0.4), inset -2px 0 0 rgba(38,38,38,0.4)",
-        }}
-      />
-
+      {/* Content area with scrollbars */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Content + Right scrollbar row */}
+        <div className="flex-1 flex min-h-0 overflow-hidden">
       {/* Window Content */}
       <div
-        className="bg-white overflow-auto flex-1 relative"
-        style={{
-          boxShadow: "inset 1px 0 0 #262626",
+            ref={contentRef}
+            className="bg-white overflow-auto flex-1 min-w-0 relative border border-[#262626] shadow-[-1px_0_0_#8A8A8A,0_-1px_0_#8A8A8A] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            onScroll={(e) => {
+              const target = e.target as HTMLDivElement;
+              setScrollInfo({
+                scrollTop: target.scrollTop,
+                scrollHeight: target.scrollHeight,
+                clientHeight: target.clientHeight,
+              });
         }}
       >
         <div className="p-4">{children}</div>
       </div>
 
-      {/* Bottom bar with scrollbar area */}
-      <div
-        className="flex shrink-0"
+          {/* Right scrollbar */}
+          <div className="w-[15px] bg-[#AAAAAA] flex flex-col border-l border-[#262626]">
+            {/* Scroll track with thumb */}
+            <div 
+              className="flex-1 relative bg-[#AAAAAA] cursor-pointer"
+              onClick={(e) => {
+                // Click on track to scroll to that position
+                if (contentRef.current && scrollInfo.scrollHeight > scrollInfo.clientHeight) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickY = e.clientY - rect.top;
+                  const trackHeight = rect.height;
+                  const scrollRatio = clickY / trackHeight;
+                  const maxScroll = scrollInfo.scrollHeight - scrollInfo.clientHeight;
+                  contentRef.current.scrollTop = scrollRatio * maxScroll;
+                }
+              }}
+            >
+              {/* Scrollbar thumb */}
+              {scrollInfo.scrollHeight > scrollInfo.clientHeight && (
+                <div 
+                  className="absolute left-0 right-0 bg-[#8888CC] border border-[#262626] cursor-grab active:cursor-grabbing"
         style={{
-          height: "20px",
-          background: "#EEEEEE",
-          borderTop: "1px solid #262626",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        {/* Horizontal scrollbar track */}
-        <div className="flex-1" />
-
-        {/* Resize grip area */}
-        <div
-          className="cursor-se-resize relative"
-          style={{ width: "20px", height: "20px", zIndex: 20 }}
-          onMouseDown={handleResizeMouseDown}
-        >
-          {/* Diagonal grip lines */}
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i}>
-              <div
-                style={{
-                  position: "absolute",
-                  width: "2px",
-                  height: "2px",
-                  background: "white",
-                  bottom: `${3 + i * 2}px`,
-                  right: `${3 + i * 2}px`,
-                  opacity: 0.8,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  width: "2px",
-                  height: "2px",
-                  background: "#808080",
-                  bottom: `${2 + i * 2}px`,
-                  right: `${2 + i * 2}px`,
-                  opacity: 0.8,
-                }}
-              />
+                    top: `${(scrollInfo.scrollTop / (scrollInfo.scrollHeight - scrollInfo.clientHeight)) * (100 - (scrollInfo.clientHeight / scrollInfo.scrollHeight) * 100)}%`,
+                    height: `${Math.max(15, (scrollInfo.clientHeight / scrollInfo.scrollHeight) * 100)}%`,
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const startY = e.clientY;
+                    const startScrollTop = scrollInfo.scrollTop;
+                    const trackHeight = e.currentTarget.parentElement?.clientHeight || 1;
+                    const thumbHeight = e.currentTarget.clientHeight;
+                    const scrollableTrack = trackHeight - thumbHeight;
+                    const scrollableHeight = scrollInfo.scrollHeight - scrollInfo.clientHeight;
+                    
+                    const handleMouseMove = (moveE: MouseEvent) => {
+                      const deltaY = moveE.clientY - startY;
+                      const scrollDelta = (deltaY / scrollableTrack) * scrollableHeight;
+                      if (contentRef.current) {
+                        contentRef.current.scrollTop = Math.max(0, Math.min(scrollableHeight, startScrollTop + scrollDelta));
+                      }
+                    };
+                    
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                >
+                  {/* Thumb grip lines */}
+                  <div className="absolute inset-x-0.5 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                    <div className="h-px bg-white opacity-80" />
+                    <div className="h-px bg-[#262626] opacity-30" />
+                    <div className="h-px bg-white opacity-80" />
+                    <div className="h-px bg-[#262626] opacity-30" />
+                    <div className="h-px bg-white opacity-80" />
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
+            
+            {/* Arrow buttons at bottom */}
+            <div className="flex flex-col">
+              {/* Scroll up button */}
+              <div 
+                className="h-[15px] bg-[#CCCCCC] border-t border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB] active:bg-[#999999]"
+                onClick={() => {
+                  if (contentRef.current) {
+                    contentRef.current.scrollTop -= 30;
+                  }
+                }}
+              >
+                <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[7px] border-b-[#262626]" />
+              </div>
+              {/* Scroll down button */}
+              <div 
+                className="h-[15px] bg-[#CCCCCC] border-t border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB] active:bg-[#999999]"
+                onClick={() => {
+                  if (contentRef.current) {
+                    contentRef.current.scrollTop += 30;
+                  }
+                }}
+              >
+                <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-[#262626]" />
+              </div>
+            </div>
         </div>
       </div>
 
-      {/* Right scrollbar track */}
-      <div
-        className="absolute right-0 top-[57px]"
-        style={{
-          width: "20px",
-          bottom: "21px",
-          background: "#EEEEEE",
-          borderLeft: "1px solid #262626",
-          pointerEvents: "auto",
-        }}
-      >
-        {/* Scroll up button */}
-        <div
-          style={{
-            height: "20px",
-            borderBottom: "1px solid #262626",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "5px solid transparent",
-              borderRight: "5px solid transparent",
-              borderBottom: "8px solid #262626",
-              opacity: 0.4,
-            }}
-          />
+        {/* Bottom scrollbar + resize corner row */}
+        <div className="h-[15px] flex">
+          {/* Bottom scrollbar - just track, no thumb */}
+          <div className="flex-1 bg-[#AAAAAA] flex border-t border-[#262626]">
+            {/* Empty scroll track */}
+            <div className="flex-1 bg-[#AAAAAA]" />
+
+            {/* Arrow buttons at right */}
+            <div className="flex flex-row">
+              {/* Scroll left button */}
+              <div className="w-[15px] bg-[#CCCCCC] border-l border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB]">
+                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[7px] border-r-[#262626]" />
+              </div>
+              {/* Scroll right button */}
+              <div className="w-[15px] bg-[#CCCCCC] border-l border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB]">
+                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[7px] border-l-[#262626]" />
+              </div>
+            </div>
         </div>
 
-        {/* Scroll track */}
-        <div className="flex-1" />
-
-        {/* Scroll down button */}
-        <div
-          className="absolute bottom-0 left-0 right-0"
-          style={{
-            height: "20px",
-            borderTop: "1px solid #262626",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+          {/* Resize corner */}
           <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "5px solid transparent",
-              borderRight: "5px solid transparent",
-              borderTop: "8px solid #262626",
-              opacity: 0.4,
-            }}
-          />
+            className="w-[15px] h-[15px] bg-[#CCCCCC] cursor-se-resize flex items-center justify-center border-l border-t border-[#262626]"
+            onMouseDown={handleResizeMouseDown}
+          >
+            <Image
+              src="/resize-icon.png"
+              alt="Resize"
+              width={11}
+              height={11}
+              className="pointer-events-none"
+            />
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Reusable window button component (close, zoom, minimize)
+function WindowButton({
+  onClick,
+  onMouseDown,
+}: {
+  onClick?: () => void;
+  onMouseDown?: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <div
+      className="relative cursor-pointer shrink-0 w-5 h-5"
+      onMouseDown={onMouseDown}
+      onClick={onClick}
+    >
+      {/* Outer highlight - top edge */}
+      <div className="absolute top-px left-px right-0.5 h-px bg-[#808080]" />
+      {/* Outer highlight - left edge */}
+      <div className="absolute top-px left-px bottom-0.5 w-px bg-[#808080]" />
+      {/* Outer shadow - bottom edge */}
+      <div className="absolute bottom-px left-px right-px h-px bg-white" />
+      {/* Outer shadow - right edge */}
+      <div className="absolute top-px right-px bottom-px w-px bg-white" />
+      {/* Inner border - top edge */}
+      <div className="absolute top-0.5 left-0.5 right-[3px] h-px bg-[#262626]" />
+      {/* Inner border - left edge */}
+      <div className="absolute top-0.5 left-0.5 bottom-[3px] w-px bg-[#262626]" />
+      {/* Inner border - bottom edge */}
+      <div className="absolute bottom-0.5 left-0.5 right-0.5 h-px bg-[#262626]" />
+      {/* Inner border - right edge */}
+      <div className="absolute top-0.5 right-0.5 bottom-0.5 w-px bg-[#262626]" />
+      {/* Innermost highlight - top edge */}
+      <div className="absolute top-[3px] left-[3px] right-1 h-px bg-[#DFDFDF] z-[2]" />
+      {/* Innermost highlight - left edge */}
+      <div className="absolute top-[3px] left-[3px] bottom-1 w-px bg-[#DFDFDF] z-[2]" />
+      {/* Innermost shadow - bottom edge */}
+      <div className="absolute bottom-[3px] left-1 right-[3px] h-px bg-[#808080] z-[2]" />
+      {/* Innermost shadow - right edge */}
+      <div className="absolute top-1 right-[3px] bottom-[3px] w-px bg-[#808080] z-[2]" />
+      {/* Center fill with gradient */}
+      <div className="absolute top-[3px] left-[3px] right-[3px] bottom-[3px] bg-gradient-to-b from-[#CCCCCC] to-[#AAAAAA]" />
     </div>
   );
 }
