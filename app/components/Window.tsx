@@ -17,6 +17,7 @@ interface WindowProps {
 
 const MIN_WIDTH = 300;
 const MIN_HEIGHT = 200;
+const MOBILE_BREAKPOINT = 640;
 
 export default function Window({
   title,
@@ -41,6 +42,7 @@ export default function Window({
     height: 0,
   });
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Use refs to track current values for mouseup handler (avoids stale closure)
@@ -53,6 +55,16 @@ export default function Window({
   const hasBeenDragged = useRef(false);
   // Track if size has been manually changed (resized)
   const hasBeenResized = useRef(false);
+
+  // Check for mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Animate in on mount
   useEffect(() => {
@@ -180,16 +192,31 @@ export default function Window({
     };
   }, [isResizing, resizeStart, onSizeChange]);
 
+  // Mobile: centered layout with smaller size
+  const mobileStyles = isMobile
+    ? {
+        left: "16px",
+        right: "16px",
+        top: "16px",
+        bottom: "auto",
+        width: "auto",
+        height: "auto",
+        maxHeight: "50dvh", // Smaller window
+      }
+    : {
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+      };
+
   return (
     <div
       className={`absolute select-none flex flex-col bg-[#CCCCCC] border border-[#262626] box-border p-[5px] ${
         isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
       } ${isDragging || isResizing ? "" : "transition-[opacity,transform] duration-150 ease-out"}`}
       style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        width: `${size.width}px`,
-        height: `${size.height}px`,
+        ...mobileStyles,
         zIndex: zIndex,
         boxShadow:
           "inset 1px 0 0 #BBBBBB, inset 0 1px 0 #BBBBBB, inset -1px 0 0 #8A8A8A, inset 0 -1px 0 #8A8A8A",
@@ -198,14 +225,17 @@ export default function Window({
     >
       {/* Title Bar */}
       <div
-        className="flex items-center h-7 bg-[#CCCCCC] cursor-grab active:cursor-grabbing shrink-0"
-        onMouseDown={handleMouseDown}
+        className={`flex items-center h-7 sm:h-7 bg-[#CCCCCC] shrink-0 ${
+          isMobile ? "cursor-default" : "cursor-grab active:cursor-grabbing"
+        }`}
+        onMouseDown={isMobile ? undefined : handleMouseDown}
       >
         {/* Close button */}
-        <div className="flex items-center gap-1 shrink-0 ">
+        <div className="flex items-center gap-1 shrink-0">
           <WindowButton
-          onMouseDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={() => onClose()}
+            isMobile={isMobile}
           />
         </div>
 
@@ -228,12 +258,12 @@ export default function Window({
           </span>
         </div>
 
-        {/* Right side buttons */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Right side buttons - hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
           <WindowButton onMouseDown={(e) => e.stopPropagation()} />
           <WindowButton onMouseDown={(e) => e.stopPropagation()} />
         </div>
-          </div>
+      </div>
 
       {/* Content area with scrollbars */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -248,8 +278,8 @@ export default function Window({
         </div>
       </div>
 
-        {/* Bottom scrollbar + resize corner row */}
-        <div className="h-[17px] flex shrink-0">
+        {/* Bottom scrollbar + resize corner row - hidden on mobile */}
+        <div className="h-[17px] hidden sm:flex shrink-0">
           {/* Bottom scrollbar - decorative, no functionality */}
           <div className="flex-1 bg-[#AAAAAA] flex border-l border-b border-[#262626]">
             {/* Empty scroll track */}
@@ -265,7 +295,7 @@ export default function Window({
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 8 5" fill="none" className="rotate-90">
                   <path fillRule="evenodd" clipRule="evenodd" d="M4.5 3.5L3.5 3.5L3.5 3L3 3L3 2.5L2.5 2.5L2.5 2L2 2L2 1.5L1.5 1.5L1.5 1L6.5 1L6.5 1.5L6 1.5L6 2L5.5 2L5.5 2.5L5 2.5L5 3L4.5 3L4.5 3.5Z" fill="#262626"/>
                 </svg>
-      </div>
+              </div>
               {/* Scroll right button */}
               <div 
                 className="w-[17px] bg-[#DDD] border border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#CCC] active:bg-[#BBB]"
@@ -275,8 +305,8 @@ export default function Window({
                   <path fillRule="evenodd" clipRule="evenodd" d="M4.5 3.5L3.5 3.5L3.5 3L3 3L3 2.5L2.5 2.5L2.5 2L2 2L2 1.5L1.5 1.5L1.5 1L6.5 1L6.5 1.5L6 1.5L6 2L5.5 2L5.5 2.5L5 2.5L5 3L4.5 3L4.5 3.5Z" fill="#262626"/>
                 </svg>
               </div>
-        </div>
-      </div>
+            </div>
+          </div>
 
           {/* Resize corner */}
           <div
@@ -289,8 +319,8 @@ export default function Window({
               width={11}
               height={11}
               className="pointer-events-none"
-          />
-        </div>
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -301,13 +331,18 @@ export default function Window({
 function WindowButton({
   onClick,
   onMouseDown,
+  isMobile = false,
 }: {
   onClick?: () => void;
   onMouseDown?: (e: React.MouseEvent) => void;
+  isMobile?: boolean;
 }) {
+  // Match stripe height (18px) on mobile
+  const sizeClass = isMobile ? "w-[20px] h-[20px]" : "w-5 h-5";
+  
   return (
     <div
-      className="relative cursor-pointer shrink-0 w-5 h-5"
+      className={`relative cursor-pointer shrink-0 ${sizeClass}`}
       onMouseDown={onMouseDown}
       onClick={onClick}
     >
