@@ -155,7 +155,7 @@ export default function DesktopIcon({
             draggable={false}
           />
         </div>
-        <div className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[16px] sm:text-[22px] [font-family:var(--font-geneva),_sans-serif] text-center leading-[1] py-[2px]">
+        <div className="pointer-events-none flex items-center justify-center min-w-[64px] w-full max-w-[80px] bg-white/50 text-[#262626] text-[20px] [font-family:var(--font-geneva),_sans-serif] text-center leading-[1] py-[2px]">
           {label}
         </div>
       </div>

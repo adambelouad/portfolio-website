@@ -342,7 +342,7 @@ export default function Home() {
   // ];
 
   return (
-    <div className="flex min-h-screen flex-col font-sans bg-[url('/quantum-foam-background.png')] bg-cover bg-center bg-no-repeat">
+    <div className="flex min-h-screen min-h-dvh flex-col font-sans bg-[url('/quantum-foam-background.png')] bg-cover bg-center bg-no-repeat bg-fixed">
       {/* Top Header Bar */}
       <div className="w-full h-[30px] bg-[#DDDDDD] relative border-b-[1px] border-b-[#BBBBBB] after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-[-2px] after:h-[1px] after:bg-[#262626] flex flex-row items-center justify-between">
         {/* Left Side of Top Header Bar */}
@@ -392,9 +392,9 @@ export default function Home() {
 
       {/* Desktop Area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Mobile: Grid layout for icons */}
+        {/* Mobile: Vertical layout for icons */}
         {isMobile && (
-          <div className="flex flex-wrap justify-end gap-4 p-4 pt-6">
+          <div className="flex flex-col items-end gap-2 p-4 pt-4">
             <DesktopIcon
               iconSrc="/default-folder.png"
               label="Portfolio"

@@ -192,16 +192,16 @@ export default function Window({
     };
   }, [isResizing, resizeStart, onSizeChange]);
 
-  // Mobile: full-width centered layout
+  // Mobile: centered layout with smaller size
   const mobileStyles = isMobile
     ? {
-        left: "8px",
-        right: "8px",
-        top: "8px",
+        left: "16px",
+        right: "16px",
+        top: "16px",
         bottom: "auto",
         width: "auto",
-        height: "calc(100% - 16px)",
-        maxHeight: "calc(100dvh - 46px)", // Account for menu bar
+        height: "auto",
+        maxHeight: "50dvh", // Smaller window
       }
     : {
         left: `${position.x}px`,
@@ -337,8 +337,8 @@ function WindowButton({
   onMouseDown?: (e: React.MouseEvent) => void;
   isMobile?: boolean;
 }) {
-  // Larger touch target on mobile
-  const sizeClass = isMobile ? "w-7 h-7" : "w-5 h-5";
+  // Match stripe height (18px) on mobile
+  const sizeClass = isMobile ? "w-[20px] h-[20px]" : "w-5 h-5";
   
   return (
     <div

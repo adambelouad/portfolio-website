@@ -2,7 +2,7 @@
 
 export default function AboutWindow() {
   return (
-    <div className="-m-4 p-4 min-h-full space-y-3 sm:space-y-4 bg-[#DDDDDD] select-text selection:bg-[#99F] selection:text-2626262">
+    <div className="-m-4 p-4 min-h-screen space-y-3 sm:space-y-4 bg-[#DDDDDD] select-text selection:bg-[#99F] selection:text-2626262">
       <h1 className="text-2xl sm:text-4xl [font-family:var(--font-apple-garamond)] font-[700] border-b border-gray-600 pb-2">
         About Me
       </h1>
