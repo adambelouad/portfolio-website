@@ -114,3 +114,30 @@ body {
   width: 0;
   height: 0;
 }
+
+/* Mobile-specific scrollbar adjustments */
+@media (max-width: 640px) {
+  .retro-scrollbar::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .retro-scrollbar::-webkit-scrollbar-button:end {
+    height: 12px;
+    width: 12px;
+  }
+}
+
+/* Viewport meta support - prevents content overflow */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

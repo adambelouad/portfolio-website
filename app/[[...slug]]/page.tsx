@@ -9,6 +9,8 @@ import PortfolioWindow from "../portfolio/PortfolioWindow";
 import AboutWindow from "../about/AboutWindow";
 import { useState, useEffect, useCallback } from "react";
 
+const MOBILE_BREAKPOINT = 640;
+
 // Define available windows and their configurations
 const WINDOW_CONFIG: Record<
   string,
@@ -70,14 +72,21 @@ export default function Home() {
 
   const [windowOrder, setWindowOrder] = useState<string[]>([]); // Track z-order (last = top)
   const [isClient, setIsClient] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Storage keys for persisting state
   const STORAGE_KEY = "openWindows";
   const POSITIONS_KEY = "windowPositions";
 
-  // Mark client-side hydration complete
+  // Mark client-side hydration complete and check for mobile
   useEffect(() => {
     setIsClient(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Bring a window to front
@@ -356,14 +365,15 @@ export default function Home() {
         {/* Right Side of Top Header Bar */}
         <div className="flex h-full items-center justify-end">
           <Clock />
+          {/* Hide decorative elements on mobile */}
           <Image
             src="/menu-bar-resizer.png"
             alt="Menu Bar Resizer"
             width={10}
             height={10}
-            className="cursor-pointer"
+            className="cursor-pointer hidden sm:block"
           />
-          <div className="relative flex h-[30px] items-center">
+          <div className="relative hidden sm:flex h-[30px] items-center">
             <MenuItem
               label="Finder"
               icon={
@@ -382,48 +392,101 @@ export default function Home() {
 
       {/* Desktop Area */}
       <div className="flex-1 relative overflow-hidden">
-        <DesktopIcon
-          iconSrc="/default-folder.png"
-          label="Portfolio"
-          onOpen={() => openWindow("portfolio")}
-          initialPosition={iconPositions.portfolio}
-          menuBarHeight={30}
-        />
+        {/* Mobile: Grid layout for icons */}
+        {isMobile && (
+          <div className="flex flex-wrap justify-end gap-4 p-4 pt-6">
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="Portfolio"
+              onOpen={() => openWindow("portfolio")}
+              initialPosition={iconPositions.portfolio}
+              menuBarHeight={30}
+            />
 
-        <DesktopIcon
-          iconSrc="/default-folder.png"
-          label="About"
-          onOpen={() => openWindow("about")}
-          initialPosition={iconPositions.about}
-          menuBarHeight={30}
-        />
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="About"
+              onOpen={() => openWindow("about")}
+              initialPosition={iconPositions.about}
+              menuBarHeight={30}
+            />
 
-        <DesktopIcon
-          iconSrc="/default-folder.png"
-          label="Resume"
-          link="/belouad_adam_resume.pdf"
-          openInNewTab={true}
-          initialPosition={iconPositions.resume}
-          menuBarHeight={30}
-        />
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="Resume"
+              link="/belouad_adam_resume.pdf"
+              openInNewTab={true}
+              initialPosition={iconPositions.resume}
+              menuBarHeight={30}
+            />
 
-        <DesktopIcon
-          iconSrc="/github-icon.png"
-          label="GitHub"
-          link="https://github.com/adambelouad"
-          openInNewTab={true}
-          initialPosition={iconPositions.github}
-          menuBarHeight={30}
-        />
+            <DesktopIcon
+              iconSrc="/github-icon.png"
+              label="GitHub"
+              link="https://github.com/adambelouad"
+              openInNewTab={true}
+              initialPosition={iconPositions.github}
+              menuBarHeight={30}
+            />
 
-        <DesktopIcon
-          iconSrc="/linkedin-logo.png"
-          label="LinkedIn"
-          link="https://www.linkedin.com/in/adambelouad"
-          openInNewTab={true}
-          initialPosition={iconPositions.linkedin}
-          menuBarHeight={30}
-        />
+            <DesktopIcon
+              iconSrc="/linkedin-logo.png"
+              label="LinkedIn"
+              link="https://www.linkedin.com/in/adambelouad"
+              openInNewTab={true}
+              initialPosition={iconPositions.linkedin}
+              menuBarHeight={30}
+            />
+          </div>
+        )}
+
+        {/* Desktop: Absolute positioned icons */}
+        {!isMobile && (
+          <>
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="Portfolio"
+              onOpen={() => openWindow("portfolio")}
+              initialPosition={iconPositions.portfolio}
+              menuBarHeight={30}
+            />
+
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="About"
+              onOpen={() => openWindow("about")}
+              initialPosition={iconPositions.about}
+              menuBarHeight={30}
+            />
+
+            <DesktopIcon
+              iconSrc="/default-folder.png"
+              label="Resume"
+              link="/belouad_adam_resume.pdf"
+              openInNewTab={true}
+              initialPosition={iconPositions.resume}
+              menuBarHeight={30}
+            />
+
+            <DesktopIcon
+              iconSrc="/github-icon.png"
+              label="GitHub"
+              link="https://github.com/adambelouad"
+              openInNewTab={true}
+              initialPosition={iconPositions.github}
+              menuBarHeight={30}
+            />
+
+            <DesktopIcon
+              iconSrc="/linkedin-logo.png"
+              label="LinkedIn"
+              link="https://www.linkedin.com/in/adambelouad"
+              openInNewTab={true}
+              initialPosition={iconPositions.linkedin}
+              menuBarHeight={30}
+            />
+          </>
+        )}
 
         {/* Render all open windows */}
         {isClient &&
