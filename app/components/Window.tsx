@@ -252,7 +252,7 @@ export default function Window({
         {/* Bottom scrollbar + resize corner row */}
         <div className="h-[17px] flex shrink-0">
           {/* Bottom scrollbar - decorative, no functionality */}
-          <div className="flex-1 bg-[#AAAAAA] flex border-t border-l border-[#262626]">
+          <div className="flex-1 bg-[#AAAAAA] flex border-l border-b border-[#262626]">
             {/* Empty scroll track */}
             <div className="flex-1 bg-[#AAAAAA]" />
 

@@ -28,9 +28,14 @@ body {
 }
 
 /* Custom retro Mac scrollbar styling */
+.retro-scrollbar {
+  overflow-y: scroll !important;
+}
+
 .retro-scrollbar::-webkit-scrollbar {
   width: 17px;
   height: 17px;
+  display: block !important;
 }
 
 .retro-scrollbar::-webkit-scrollbar-track {
@@ -105,5 +110,7 @@ body {
 }
 
 .retro-scrollbar::-webkit-scrollbar-corner {
-  background: #CCCCCC;
+  display: none;
+  width: 0;
+  height: 0;
 }
