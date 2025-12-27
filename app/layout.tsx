@@ -40,6 +40,11 @@ const appleGaramond = localFont({
       weight: "400",
       style: "normal",
     },
+    {
+      path: "./fonts/apple-garamond-bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
   ],
   variable: "--font-apple-garamond",
   display: "swap",
