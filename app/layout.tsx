@@ -28,6 +28,28 @@ const geneva = localFont({
   weight: "400",
 });
 
+const appleGaramond = localFont({
+  src: [
+    {
+      path: "./fonts/apple-garamond-light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "./fonts/apple-garamond.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/apple-garamond-bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-apple-garamond",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Adam Belouad",
   description: "Adam Belouad's Personal Website",
@@ -41,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${charcoal.variable} ${geneva.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${charcoal.variable} ${geneva.variable} ${appleGaramond.variable} antialiased`}
       >
         {children}
         <Analytics />

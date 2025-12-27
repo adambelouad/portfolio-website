@@ -30,11 +30,11 @@ export default function Home() {
   const defaultRightX = 1920 - 96 - 16;
 
   const [iconPositions, setIconPositions] = useState({
-    // portfolio: { x: defaultRightX, y: 45 },
-    // about: { x: defaultRightX, y: 140 },
-    resume: { x: defaultRightX, y: 45 },
-    github: { x: defaultRightX, y: 140 },
-    linkedin: { x: defaultRightX, y: 235 },
+    portfolio: { x: defaultRightX, y: 45 },
+    about: { x: defaultRightX, y: 140 },
+    resume: { x: defaultRightX, y: 235 },
+    github: { x: defaultRightX, y: 330 },
+    linkedin: { x: defaultRightX, y: 425 },
   });
 
   // Use lazy initialization to read from localStorage synchronously on first render
@@ -161,16 +161,16 @@ export default function Home() {
     [savePositionsToStorage],
   );
 
-  // Calculate center position for new windows (200px higher than true center)
+  // Calculate center position for new windows (100px higher than true center)
   const getCenteredPosition = useCallback(() => {
     if (typeof window === "undefined") {
-      return { x: 200, y: 100 }; // SSR fallback
+      return { x: 200, y: 200 }; // SSR fallback
     }
     // Window component is 600px wide and ~400px tall
     const windowWidth = 600;
     const windowHeight = 400;
     const menuBarHeight = 30;
-    const verticalOffset = 200; // Higher than center
+    const verticalOffset = 100; // Higher than center
 
     return {
       x: Math.max(0, (window.innerWidth - windowWidth) / 2),
@@ -241,20 +241,20 @@ export default function Home() {
     });
 
     setIconPositions({
-      // portfolio: rightPosition(45),
-      // about: rightPosition(140),
-      resume: rightPosition(45),
-      github: rightPosition(140),
-      linkedin: rightPosition(235),
+      portfolio: rightPosition(45),
+      about: rightPosition(140),
+      resume: rightPosition(235),
+      github: rightPosition(330),
+      linkedin: rightPosition(425),
     });
 
     const handleResize = () => {
       setIconPositions({
-        // portfolio: rightPosition(45),
-        // about: rightPosition(140),
-        resume: rightPosition(45),
-        github: rightPosition(140),
-        linkedin: rightPosition(235),
+        portfolio: rightPosition(45),
+        about: rightPosition(140),
+        resume: rightPosition(235),
+        github: rightPosition(330),
+        linkedin: rightPosition(425),
       });
     };
 
@@ -280,8 +280,8 @@ export default function Home() {
         `/${windowId}`,
       );
     } else {
-      // Window already open, just bring to front
-      bringToFront(windowId);
+      // Window already open, close it (toggle behavior)
+      closeWindow(windowId);
     }
   };
 
@@ -382,7 +382,7 @@ export default function Home() {
 
       {/* Desktop Area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* <DesktopIcon
+        <DesktopIcon
           iconSrc="/default-folder.png"
           label="Portfolio"
           onOpen={() => openWindow("portfolio")}
@@ -396,7 +396,7 @@ export default function Home() {
           onOpen={() => openWindow("about")}
           initialPosition={iconPositions.about}
           menuBarHeight={30}
-        /> */}
+        />
 
         <DesktopIcon
           iconSrc="/default-folder.png"
