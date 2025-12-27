@@ -41,7 +41,6 @@ export default function Window({
     height: 0,
   });
   const [isVisible, setIsVisible] = useState(false);
-  const [scrollInfo, setScrollInfo] = useState({ scrollTop: 0, scrollHeight: 0, clientHeight: 0 });
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Use refs to track current values for mouseup handler (avoids stale closure)
@@ -63,36 +62,6 @@ export default function Window({
     return () => cancelAnimationFrame(timer);
   }, []);
 
-  // Update scroll info when content changes or window resizes
-  const updateScrollInfo = () => {
-    if (contentRef.current) {
-      setScrollInfo({
-        scrollTop: contentRef.current.scrollTop,
-        scrollHeight: contentRef.current.scrollHeight,
-        clientHeight: contentRef.current.clientHeight,
-      });
-    }
-  };
-
-  useEffect(() => {
-    updateScrollInfo();
-    
-    // Use ResizeObserver to detect content size changes
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollInfo();
-    });
-    
-    if (contentRef.current) {
-      resizeObserver.observe(contentRef.current);
-    }
-    
-    return () => resizeObserver.disconnect();
-  }, [children]);
-
-  // Also update scroll info when window size changes
-  useEffect(() => {
-    updateScrollInfo();
-  }, [size]);
 
   // Update position when initialPosition prop changes (only if never dragged in this session)
   useEffect(() => {
@@ -265,143 +234,54 @@ export default function Window({
           <WindowButton onMouseDown={(e) => e.stopPropagation()} />
           <WindowButton onMouseDown={(e) => e.stopPropagation()} />
         </div>
-      </div>
+          </div>
 
       {/* Content area with scrollbars */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Content + Right scrollbar row */}
+        {/* Content row */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
-      {/* Window Content */}
-      <div
+          {/* Window Content with native styled scrollbar */}
+          <div
             ref={contentRef}
-            className="bg-white overflow-auto flex-1 min-w-0 relative border border-[#262626] shadow-[-1px_0_0_#8A8A8A,0_-1px_0_#8A8A8A] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            onScroll={(e) => {
-              const target = e.target as HTMLDivElement;
-              setScrollInfo({
-                scrollTop: target.scrollTop,
-                scrollHeight: target.scrollHeight,
-                clientHeight: target.clientHeight,
-              });
-        }}
-      >
-        <div className="p-4">{children}</div>
-      </div>
-
-          {/* Right scrollbar */}
-          <div className="w-[15px] bg-[#AAAAAA] flex flex-col border-l border-[#262626]">
-            {/* Scroll track with thumb */}
-            <div 
-              className="flex-1 relative bg-[#AAAAAA] cursor-pointer"
-              onClick={(e) => {
-                // Click on track to scroll to that position
-                if (contentRef.current && scrollInfo.scrollHeight > scrollInfo.clientHeight) {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickY = e.clientY - rect.top;
-                  const trackHeight = rect.height;
-                  const scrollRatio = clickY / trackHeight;
-                  const maxScroll = scrollInfo.scrollHeight - scrollInfo.clientHeight;
-                  contentRef.current.scrollTop = scrollRatio * maxScroll;
-                }
-              }}
-            >
-              {/* Scrollbar thumb */}
-              {scrollInfo.scrollHeight > scrollInfo.clientHeight && (
-                <div 
-                  className="absolute left-0 right-0 bg-[#8888CC] border border-[#262626] cursor-grab active:cursor-grabbing"
-        style={{
-                    top: `${(scrollInfo.scrollTop / (scrollInfo.scrollHeight - scrollInfo.clientHeight)) * (100 - (scrollInfo.clientHeight / scrollInfo.scrollHeight) * 100)}%`,
-                    height: `${Math.max(15, (scrollInfo.clientHeight / scrollInfo.scrollHeight) * 100)}%`,
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const startY = e.clientY;
-                    const startScrollTop = scrollInfo.scrollTop;
-                    const trackHeight = e.currentTarget.parentElement?.clientHeight || 1;
-                    const thumbHeight = e.currentTarget.clientHeight;
-                    const scrollableTrack = trackHeight - thumbHeight;
-                    const scrollableHeight = scrollInfo.scrollHeight - scrollInfo.clientHeight;
-                    
-                    const handleMouseMove = (moveE: MouseEvent) => {
-                      const deltaY = moveE.clientY - startY;
-                      const scrollDelta = (deltaY / scrollableTrack) * scrollableHeight;
-                      if (contentRef.current) {
-                        contentRef.current.scrollTop = Math.max(0, Math.min(scrollableHeight, startScrollTop + scrollDelta));
-                      }
-                    };
-                    
-                    const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
-                    };
-                    
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                  }}
-                >
-                  {/* Thumb grip lines */}
-                  <div className="absolute inset-x-0.5 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                    <div className="h-px bg-white opacity-80" />
-                    <div className="h-px bg-[#262626] opacity-30" />
-                    <div className="h-px bg-white opacity-80" />
-                    <div className="h-px bg-[#262626] opacity-30" />
-                    <div className="h-px bg-white opacity-80" />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Arrow buttons at bottom */}
-            <div className="flex flex-col">
-              {/* Scroll up button */}
-              <div 
-                className="h-[15px] bg-[#CCCCCC] border-t border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB] active:bg-[#999999]"
-                onClick={() => {
-                  if (contentRef.current) {
-                    contentRef.current.scrollTop -= 30;
-                  }
-                }}
-              >
-                <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[7px] border-b-[#262626]" />
-              </div>
-              {/* Scroll down button */}
-              <div 
-                className="h-[15px] bg-[#CCCCCC] border-t border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB] active:bg-[#999999]"
-                onClick={() => {
-                  if (contentRef.current) {
-                    contentRef.current.scrollTop += 30;
-                  }
-                }}
-              >
-                <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-[#262626]" />
-              </div>
-            </div>
+            className="retro-scrollbar bg-white overflow-y-auto overflow-x-hidden flex-1 min-w-0 relative border border-[#262626] shadow-[-1px_0_0_#8A8A8A,0_-1px_0_#8A8A8A]"
+          >
+            <div className="p-4">{children}</div>
         </div>
       </div>
 
         {/* Bottom scrollbar + resize corner row */}
-        <div className="h-[15px] flex">
-          {/* Bottom scrollbar - just track, no thumb */}
-          <div className="flex-1 bg-[#AAAAAA] flex border-t border-[#262626]">
+        <div className="h-[17px] flex shrink-0">
+          {/* Bottom scrollbar - decorative, no functionality */}
+          <div className="flex-1 bg-[#AAAAAA] flex border-t border-l border-[#262626]">
             {/* Empty scroll track */}
             <div className="flex-1 bg-[#AAAAAA]" />
 
             {/* Arrow buttons at right */}
             <div className="flex flex-row">
               {/* Scroll left button */}
-              <div className="w-[15px] bg-[#CCCCCC] border-l border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB]">
-                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[7px] border-r-[#262626]" />
-              </div>
+              <div 
+                className="w-[17px] bg-[#DDD] border border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#CCC] active:bg-[#BBB]"
+                style={{ boxShadow: "inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #808080" }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 8 5" fill="none" className="rotate-90">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M4.5 3.5L3.5 3.5L3.5 3L3 3L3 2.5L2.5 2.5L2.5 2L2 2L2 1.5L1.5 1.5L1.5 1L6.5 1L6.5 1.5L6 1.5L6 2L5.5 2L5.5 2.5L5 2.5L5 3L4.5 3L4.5 3.5Z" fill="#262626"/>
+                </svg>
+      </div>
               {/* Scroll right button */}
-              <div className="w-[15px] bg-[#CCCCCC] border-l border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#BBBBBB]">
-                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[7px] border-l-[#262626]" />
+              <div 
+                className="w-[17px] bg-[#DDD] border border-[#262626] flex items-center justify-center cursor-pointer hover:bg-[#CCC] active:bg-[#BBB]"
+                style={{ boxShadow: "inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #808080" }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 8 5" fill="none" className="-rotate-90">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M4.5 3.5L3.5 3.5L3.5 3L3 3L3 2.5L2.5 2.5L2.5 2L2 2L2 1.5L1.5 1.5L1.5 1L6.5 1L6.5 1.5L6 1.5L6 2L5.5 2L5.5 2.5L5 2.5L5 3L4.5 3L4.5 3.5Z" fill="#262626"/>
+                </svg>
               </div>
-            </div>
         </div>
+      </div>
 
           {/* Resize corner */}
           <div
-            className="w-[15px] h-[15px] bg-[#CCCCCC] cursor-se-resize flex items-center justify-center border-l border-t border-[#262626]"
+            className="w-[17px] h-[17px] bg-[#CCCCCC] cursor-se-resize flex items-center justify-center border-l border-t border-[#262626]"
             onMouseDown={handleResizeMouseDown}
           >
             <Image
@@ -410,8 +290,8 @@ export default function Window({
               width={11}
               height={11}
               className="pointer-events-none"
-            />
-          </div>
+          />
+        </div>
         </div>
       </div>
     </div>

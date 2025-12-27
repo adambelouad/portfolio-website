@@ -26,3 +26,84 @@ body {
 * {
   color: inherit;
 }
+
+/* Custom retro Mac scrollbar styling */
+.retro-scrollbar::-webkit-scrollbar {
+  width: 17px;
+  height: 17px;
+}
+
+.retro-scrollbar::-webkit-scrollbar-track {
+  background: #AAAAAA;
+  border-left: 1px solid #262626;
+}
+
+.retro-scrollbar::-webkit-scrollbar-track:horizontal {
+  border-left: none;
+  border-top: 1px solid #262626;
+}
+
+.retro-scrollbar::-webkit-scrollbar-thumb {
+  background: #99F url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='8' viewBox='0 0 9 8' fill='none'%3E%3Crect opacity='0.3' x='2' y='4' width='6' height='1' fill='white'/%3E%3Crect opacity='0.5' y='4' width='2' height='1' fill='white'/%3E%3Crect opacity='0.3' x='2' y='2' width='6' height='1' fill='white'/%3E%3Crect opacity='0.5' y='2' width='2' height='1' fill='white'/%3E%3Crect opacity='0.3' x='2' width='6' height='1' fill='white'/%3E%3Crect opacity='0.5' width='2' height='1' fill='white'/%3E%3Crect opacity='0.3' x='2' y='6' width='6' height='1' fill='white'/%3E%3Crect opacity='0.5' y='6' width='2' height='1' fill='white'/%3E%3C/svg%3E") no-repeat center;
+  border: 1px solid #262626;
+  box-shadow: -2px 1px 2px 0 rgba(38, 38, 38, 0.50), -2px -1px 1px 0 #4C4C99 inset, 2px 2px 0 0 rgba(255, 255, 255, 0.30) inset;
+}
+
+.retro-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #88D;
+}
+
+.retro-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: #66C;
+}
+
+/* Base button styles */
+.retro-scrollbar::-webkit-scrollbar-button {
+  background: #DDD;
+  border: 1px solid #262626;
+  box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #808080;
+  height: 17px;
+  width: 17px;
+}
+
+.retro-scrollbar::-webkit-scrollbar-button:hover {
+  background-color: #CCC;
+}
+
+.retro-scrollbar::-webkit-scrollbar-button:active {
+  background-color: #BBB;
+}
+
+/* Hide ALL single buttons (one at each end) */
+.retro-scrollbar::-webkit-scrollbar-button:single-button {
+  display: none;
+}
+
+/* Show double buttons at end (bottom for vertical) */
+.retro-scrollbar::-webkit-scrollbar-button:double-button:vertical:increment {
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 8 5' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M4.5 3.5L3.5 3.5L3.5 3L3 3L3 2.5L2.5 2.5L2.5 2L2 2L2 1.5L1.5 1.5L1.5 1L6.5 1L6.5 1.5L6 1.5L6 2L5.5 2L5.5 2.5L5 2.5L5 3L4.5 3L4.5 3.5Z' fill='%23262626'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.retro-scrollbar::-webkit-scrollbar-button:double-button:vertical:decrement {
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 8 5' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3.5 1.5L4.5 1.5L4.5 2L5 2L5 2.5L5.5 2.5L5.5 3L6 3L6 3.5L6.5 3.5L6.5 4L1.5 4L1.5 3.5L2 3.5L2 3L2.5 3L2.5 2.5L3 2.5L3 2L3.5 2L3.5 1.5Z' fill='%23262626'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Hide double buttons at start (top for vertical) */
+.retro-scrollbar::-webkit-scrollbar-button:double-button:vertical:start {
+  display: none;
+}
+
+/* Hide horizontal scrollbar completely - we'll add decorative one manually */
+.retro-scrollbar::-webkit-scrollbar:horizontal {
+  display: none;
+}
+
+.retro-scrollbar::-webkit-scrollbar-corner {
+  background: #CCCCCC;
+}
