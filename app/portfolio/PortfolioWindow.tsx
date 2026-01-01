@@ -1,20 +1,289 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
+import { portfolioItems, PortfolioItem } from "./portfolioData";
 
-export default function PortfolioWindow() {
+// Mac OS 9 style list row component based on Figma designs
+function ListRow({
+  item,
+  isSelected,
+  selectedColumn,
+  onClick,
+  onOpenWindow,
+}: {
+  item: PortfolioItem;
+  isSelected: boolean;
+  selectedColumn: string;
+  onClick: () => void;
+  onOpenWindow?: (windowId: string) => void;
+}) {
+  const handleDoubleClick = () => {
+    if (item.windowId && onOpenWindow) {
+      onOpenWindow(item.windowId);
+    } else {
+      window.open(item.link, "_blank");
+    }
+  };
+
+  // Helper to get cell background color based on column selection and row selection
+  const getCellBg = (column: string) => {
+    if (isSelected) return "bg-[#339]";
+    if (selectedColumn === column) return "bg-[#ddd]";
+    return "bg-[#eee]";
+  };
+
   return (
-    <div className="-m-4 p-4 pt-8 sm:pt-12 min-h-screen bg-[#DDDDDD] flex flex-col items-center">
+    <div
+      onClick={onClick}
+      onDoubleClick={handleDoubleClick}
+      className={`
+        flex flex-row w-full cursor-pointer select-none border-b border-white
+        ${isSelected ? "bg-[#339]" : ""}
+      `}
+    >
+      {/* Name cell with icon - min width to fit longest name, can expand */}
+      <div
+        className={`
+          flex-1 min-w-[280px] flex gap-[12px] items-center pl-[10px] pr-[8px] py-[8px]
+          ${getCellBg("name")}
+        `}
+      >
+        {/* Icon with padding */}
+        <div className="shrink-0 w-[32px] h-[32px] relative">
       <Image
-        src="/traffic-cone.png"
-        alt="Under Construction"
-        width={128}
-        height={128}
-        className="mb-4 object-contain"
+            src={item.icon}
+            alt={item.name}
+            fill
+            className="object-contain"
+          />
+        </div>
+        {/* Name text - highlighted with azul bg when selected */}
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            if (item.windowId && onOpenWindow) {
+              onOpenWindow(item.windowId);
+            } else if (item.link) {
+              window.open(item.link, "_blank");
+            }
+          }}
+          className={`
+            [font-family:var(--font-geneva)] text-[22px] leading-tight whitespace-nowrap cursor-pointer
+            ${isSelected ? "bg-[#339]" : ""}
+          `}
+          style={isSelected ? { color: "white" } : { color: "#262626" }}
+        >
+          {item.name}
+        </span>
+      </div>
+
+      {/* Date Modified cell */}
+      <div
+        className={`
+          w-[240px] shrink-0 flex items-center px-[8px] py-[8px]
+          ${getCellBg("date")}
+        `}
+      >
+        <p
+          className={`
+            [font-family:var(--font-geneva)] text-[22px] leading-tight whitespace-nowrap
+          `}
+          style={isSelected ? { color: "white" } : { color: "black" }}
+        >
+          {item.dateModified}
+        </p>
+      </div>
+
+      {/* Size cell */}
+      <div
+        className={`
+          w-[100px] shrink-0 flex items-center justify-end px-[8px] py-[8px]
+          ${getCellBg("size")}
+        `}
+      >
+        <p
+          className={`
+            [font-family:var(--font-geneva)] text-[22px] leading-normal whitespace-nowrap
+          `}
+          style={isSelected ? { color: "white" } : { color: "black" }}
+        >
+          {item.size}
+        </p>
+      </div>
+
+      {/* Kind cell */}
+      <div
+        className={`
+          w-[120px] shrink-0 flex items-center px-[8px] py-[8px]
+          ${getCellBg("kind")}
+        `}
+      >
+        <p
+          className={`
+            [font-family:var(--font-geneva)] text-[22px] leading-tight whitespace-nowrap
+          `}
+          style={isSelected ? { color: "white" } : { color: "black" }}
+        >
+          {item.kind}
+        </p>
+      </div>
+
+      {/* Empty cell */}
+      <div
+        className={`
+          w-[40px] shrink-0 py-[8px]
+          ${getCellBg("empty")}
+        `}
       />
-      <p className="text-xl sm:text-2xl [font-family:var(--font-apple-garamond)] font-[400] text-center">
-        under construction
-      </p>
+    </div>
+  );
+}
+
+// Mac OS 9 style column list header component based on Figma designs
+function ColumnHeader({
+  label,
+  isSelected = false,
+  hasIconSpace = false,
+  alignRight = false,
+  onClick,
+  className = "",
+}: {
+  label: string;
+  isSelected?: boolean;
+  hasIconSpace?: boolean;
+  alignRight?: boolean;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`
+        relative flex items-center py-[0px] px-[8px]
+        border border-solid border-[#484848]
+        [font-family:var(--font-geneva)] text-[20px] text-[#262626] whitespace-nowrap
+        cursor-pointer select-none
+        ${hasIconSpace ? "pl-[10px]" : ""}
+        ${alignRight ? "justify-end" : ""}
+        ${isSelected 
+          ? "bg-[#999] shadow-[inset_-2px_0px_0px_0px_rgba(255,255,255,0.2),inset_0px_-2px_0px_0px_rgba(255,255,255,0.2),inset_2px_0px_0px_0px_rgba(38,38,38,0.6),inset_0px_2px_0px_0px_rgba(38,38,38,0.6)]" 
+          : "bg-[#ccc] shadow-[inset_-2px_0px_0px_0px_#808080,inset_0px_-2px_0px_0px_#808080,inset_2px_0px_0px_0px_white,inset_0px_2px_0px_0px_white]"
+        }
+        ${className}
+      `}
+    >
+      <p className="leading-normal">{label || "\u00A0"}</p>
+    </div>
+  );
+}
+
+export default function PortfolioWindow({
+  onOpenWindow,
+}: {
+  onOpenWindow?: (windowId: string) => void;
+}) {
+  const [selectedColumn, setSelectedColumn] = useState("name");
+  const [selectedRow, setSelectedRow] = useState<string | null>(null);
+  const [dateSortOrder, setDateSortOrder] = useState<"newest" | "oldest">("newest");
+
+  // Parse date string to Date object for sorting
+  const parseDate = (dateString: string): Date => {
+    // Format: "Sat, Dec 27, 2024, 2:30 PM"
+    return new Date(dateString);
+  };
+
+  // Sort portfolio items based on date sort order
+  const sortedItems = [...portfolioItems].sort((a, b) => {
+    const dateA = parseDate(a.dateModified);
+    const dateB = parseDate(b.dateModified);
+    if (dateSortOrder === "newest") {
+      return dateB.getTime() - dateA.getTime(); // Newest first
+    } else {
+      return dateA.getTime() - dateB.getTime(); // Oldest first
+    }
+  });
+
+  const handleDateHeaderClick = () => {
+    setSelectedColumn("date");
+    // Toggle sort order
+    setDateSortOrder((prev) => (prev === "newest" ? "oldest" : "newest"));
+  };
+
+  return (
+    <div className="-m-4 p-0 bg-white flex flex-col">
+      {/* Mac OS 9 Column List Header Row */}
+      <div className="flex flex-row w-full">
+        <ColumnHeader
+          label="Name"
+          isSelected={selectedColumn === "name"}
+          hasIconSpace={true}
+          onClick={() => setSelectedColumn("name")}
+          className="flex-1 min-w-[280px]"
+        />
+        <ColumnHeader
+          label="Date Modified"
+          isSelected={selectedColumn === "date"}
+          onClick={handleDateHeaderClick}
+          className="w-[240px] shrink-0"
+        />
+        <ColumnHeader
+          label="Size"
+          isSelected={selectedColumn === "size"}
+          alignRight={true}
+          onClick={() => setSelectedColumn("size")}
+          className="w-[100px] shrink-0"
+        />
+        <ColumnHeader
+          label="Kind"
+          isSelected={selectedColumn === "kind"}
+          onClick={() => setSelectedColumn("kind")}
+          className="w-[120px] shrink-0"
+        />
+        
+        {/* Final column with reorder button */}
+        <div
+          onClick={() => setSelectedColumn("empty")}
+          className={`
+            relative flex gap-[10px] items-center justify-center px-[3px] py-[4px]
+            border border-solid border-[#484848]
+            cursor-pointer select-none w-[40px] shrink-0
+            ${selectedColumn === "empty"
+              ? "bg-[#999] shadow-[inset_-2px_0px_0px_0px_rgba(255,255,255,0.2),inset_0px_-2px_0px_0px_rgba(255,255,255,0.2),inset_2px_0px_0px_0px_rgba(38,38,38,0.6),inset_0px_2px_0px_0px_rgba(38,38,38,0.6)]" 
+              : "bg-[#ccc] shadow-[inset_-2px_0px_0px_0px_#808080,inset_0px_-2px_0px_0px_#808080,inset_2px_0px_0px_0px_white,inset_0px_2px_0px_0px_white]"
+            }
+          `}
+        >
+          <ReorderButton />
+        </div>
+      </div>
+
+      {/* List rows */}
+      <div className="flex-1 flex flex-col">
+        {sortedItems.map((item) => (
+          <ListRow
+            key={item.id}
+            item={item}
+            isSelected={selectedRow === item.id}
+            selectedColumn={selectedColumn}
+            onClick={() => setSelectedRow(item.id)}
+            onOpenWindow={onOpenWindow}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Mac OS 9 reorder button (sort arrow) 
+function ReorderButton({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative h-[9px] w-[10px] ${className}`}>
+      {/* Triangle made of horizontal lines pointing up */}
+      <div className="absolute bg-[#262626] h-px left-px top-[7px] w-[8px] shadow-[0px_0px_0px_1px_rgba(38,38,38,0.05),0px_0px_0px_0.5px_rgba(38,38,38,0.2)]" />
+      <div className="absolute bg-[#262626] h-px left-[2px] top-[5px] w-[6px] shadow-[0px_0px_0px_1px_rgba(38,38,38,0.05),0px_0px_0px_0.5px_rgba(38,38,38,0.2)]" />
+      <div className="absolute bg-[#262626] h-px left-[3px] top-[3px] w-[4px] shadow-[0px_0px_0px_1px_rgba(38,38,38,0.05),0px_0px_0px_0.5px_rgba(38,38,38,0.2)]" />
+      <div className="absolute bg-[#262626] h-px left-[4px] top-px w-[2px] shadow-[0px_0px_0px_1px_rgba(38,38,38,0.05),0px_0px_0px_0.5px_rgba(38,38,38,0.2)]" />
     </div>
   );
 }

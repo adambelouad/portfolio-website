@@ -8,6 +8,7 @@ interface WindowProps {
   children: ReactNode;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
+  maxHeight?: number;
   zIndex?: number;
   onClose: () => void;
   onPositionChange?: (position: { x: number; y: number }) => void;
@@ -24,6 +25,7 @@ export default function Window({
   children,
   initialPosition = { x: 100, y: 100 },
   initialSize = { width: 600, height: 400 },
+  maxHeight,
   zIndex = 50,
   onClose,
   onPositionChange,
@@ -95,10 +97,15 @@ export default function Window({
   // Update size when initialSize prop changes (only if never manually resized)
   useEffect(() => {
     if (!isResizing && !hasBeenResized.current) {
+      let adjustedSize = { ...initialSize };
+      // Apply maxHeight constraint if provided
+      if (maxHeight && adjustedSize.height > maxHeight) {
+        adjustedSize.height = maxHeight;
+      }
       const needsUpdate =
-        size.width !== initialSize.width || size.height !== initialSize.height;
+        size.width !== adjustedSize.width || size.height !== adjustedSize.height;
       if (needsUpdate) {
-        setSize(initialSize);
+        setSize(adjustedSize);
       }
     }
   }, [
@@ -107,6 +114,7 @@ export default function Window({
     isResizing,
     size.width,
     size.height,
+    maxHeight,
   ]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -168,7 +176,11 @@ export default function Window({
         const deltaX = e.clientX - resizeStart.x;
         const deltaY = e.clientY - resizeStart.y;
         const newWidth = Math.max(MIN_WIDTH, resizeStart.width + deltaX);
-        const newHeight = Math.max(MIN_HEIGHT, resizeStart.height + deltaY);
+        let newHeight = Math.max(MIN_HEIGHT, resizeStart.height + deltaY);
+        // Apply maxHeight constraint if provided
+        if (maxHeight) {
+          newHeight = Math.min(newHeight, maxHeight);
+        }
         setSize({ width: newWidth, height: newHeight });
       }
     };
@@ -190,7 +202,7 @@ export default function Window({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, resizeStart, onSizeChange]);
+  }, [isResizing, resizeStart, onSizeChange, maxHeight]);
 
   // Mobile: centered layout with smaller size
   const mobileStyles = isMobile
