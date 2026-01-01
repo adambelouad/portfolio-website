@@ -7,17 +7,41 @@ import DesktopIcon from "../components/DesktopIcon";
 import Window from "../components/Window";
 import PortfolioWindow from "../portfolio/PortfolioWindow";
 import AboutWindow from "../about/AboutWindow";
+import PersonalWebsiteWindow from "../portfolio/personal-website/PersonalWebsiteWindow";
+import ResumeWindow from "../resume/ResumeWindow";
+import { portfolioItems } from "../portfolio/portfolioData";
 import { useState, useEffect, useCallback } from "react";
 
 const MOBILE_BREAKPOINT = 640;
 
+// Calculate portfolio window height based on number of items
+// Header row: ~32px, Each row: ~50px (py-[8px] * 2 = 16px padding + 32px icon height + borders), Window chrome: ~40px
+const calculatePortfolioHeight = () => {
+  const headerHeight = 32; // Column header row
+  const rowHeight = 50; // Each item row (icon is 32px + padding + borders)
+  const windowChrome = 40; // Title bar + window padding/margins
+  const itemCount = portfolioItems.length;
+  return headerHeight + (rowHeight * itemCount) + windowChrome;
+};
+
 // Define available windows and their configurations
 const WINDOW_CONFIG: Record<
   string,
-  { title: string; component: React.ComponentType }
+  { title: string; component: React.ComponentType; initialSize?: { width: number; height: number }; maxHeight?: number }
 > = {
-  portfolio: { title: "Portfolio", component: PortfolioWindow },
+  portfolio: { 
+    title: "Portfolio", 
+    component: PortfolioWindow, 
+    initialSize: { width: 900, height: calculatePortfolioHeight() },
+    maxHeight: calculatePortfolioHeight()
+  },
   about: { title: "About", component: AboutWindow },
+  "personal-website": { title: "Personal Website", component: PersonalWebsiteWindow },
+  resume: { 
+    title: "Resume", 
+    component: ResumeWindow, 
+    initialSize: { width: 700, height: 800 }
+  },
 };
 
 // Helper to get initial open windows from URL (runs during SSR and client)
@@ -170,16 +194,18 @@ export default function Home() {
     [savePositionsToStorage],
   );
 
-  // Calculate center position for new windows (100px higher than true center)
-  const getCenteredPosition = useCallback(() => {
+  // Calculate center position for new windows
+  const getCenteredPosition = useCallback((windowId?: string) => {
     if (typeof window === "undefined") {
       return { x: 200, y: 200 }; // SSR fallback
     }
-    // Window component is 600px wide and ~400px tall
-    const windowWidth = 600;
-    const windowHeight = 400;
+    // Get window size from config or use defaults
+    const config = windowId ? WINDOW_CONFIG[windowId] : null;
+    const windowWidth = config?.initialSize?.width ?? 600;
+    const windowHeight = config?.initialSize?.height ?? 400;
     const menuBarHeight = 30;
-    const verticalOffset = 100; // Higher than center
+    // Only apply vertical offset for smaller windows, not tall ones like resume
+    const verticalOffset = windowHeight > 600 ? 0 : 100;
 
     return {
       x: Math.max(0, (window.innerWidth - windowWidth) / 2),
@@ -198,8 +224,8 @@ export default function Home() {
       if (windowPositions[windowId]) {
         return windowPositions[windowId];
       }
-      // New windows open centered
-      return getCenteredPosition();
+      // New windows open centered based on their size
+      return getCenteredPosition(windowId);
     },
     [windowPositions, getCenteredPosition],
   );
@@ -414,8 +440,7 @@ export default function Home() {
             <DesktopIcon
               iconSrc="/default-folder.png"
               label="Resume"
-              link="/belouad_adam_resume.pdf"
-              openInNewTab={true}
+              onOpen={() => openWindow("resume")}
               initialPosition={iconPositions.resume}
               menuBarHeight={30}
             />
@@ -462,8 +487,7 @@ export default function Home() {
             <DesktopIcon
               iconSrc="/default-folder.png"
               label="Resume"
-              link="/belouad_adam_resume.pdf"
-              openInNewTab={true}
+              onOpen={() => openWindow("resume")}
               initialPosition={iconPositions.resume}
               menuBarHeight={30}
             />
@@ -503,11 +527,17 @@ export default function Home() {
                 title={config.title}
                 onClose={() => closeWindow(windowId)}
                 initialPosition={savedPosition}
+                initialSize={config.initialSize}
+                maxHeight={config.maxHeight}
                 onPositionChange={(pos) => updateWindowPosition(windowId, pos)}
                 zIndex={zIndex}
                 onFocus={() => bringToFront(windowId)}
               >
-                <WindowComponent />
+                {windowId === "portfolio" ? (
+                  <PortfolioWindow onOpenWindow={openWindow} />
+                ) : (
+                  <WindowComponent />
+                )}
               </Window>
             );
           })}
