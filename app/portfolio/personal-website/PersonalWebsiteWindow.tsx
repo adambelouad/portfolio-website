@@ -7,7 +7,7 @@ export default function PersonalWebsiteWindow() {
         Personal Website
       </h1>
       <p className="text-base sm:text-xl text-gray-600 [font-family:var(--font-apple-garamond)] font-[400] leading-relaxed">
-        Hi! My name is Adam, and I am currently studying Computer Science and Architecture at Princeton Univeristy. I am interested in the future of human–computer interaction, design, and the intersection of urban design and technology.
+        you're alread on it! my personal website is inspired by macOS 9 and was coded in React!
       </p>
     </div>
   );
